@@ -56,7 +56,7 @@ Target layout:
   docs/
 ```
 
-One FastAPI process, one Postgres, packages with hard boundaries. Prefer generating the frontend API client from OpenAPI (`/docs`) over hand-written URLs.
+One FastAPI process, one Postgres, packages with hard boundaries. Prefer generating the frontend API client from OpenAPI (`/docs`) over hand-written URLs. Stage 0 ships a thin `api.ts`; generate after login / `GET /api/me` are stable.
 
 ## Commands (once code exists)
 
@@ -73,7 +73,7 @@ docker compose exec api pytest
 - Env: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRE_MINUTES` (480), `MEALTY_CITY`, `CUTOFF_TIME`.
 - Do not commit secrets (`.env`, `.env.local`).
 
-Demo users: `employee@kis.local` / `employee`, `procurement@kis.local` / `procurement`, `admin@kis.local` / `admin`.
+Demo users: `employee@kis.local` / `employee`, `employee2@kis.local` / `employee2`, `procurement@kis.local` / `procurement`, `admin@kis.local` / `admin`.
 
 ## Coding conventions
 
