@@ -1,0 +1,1 @@
+"""CorpLunch FastAPI application."""
