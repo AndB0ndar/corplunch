@@ -1,6 +1,6 @@
 # Модель данных
 
-Цены храним в копейках (`integer`), чтобы не ловить ошибки float. Даты планов — календарные `date` в часовом поясе офиса (`Europe/Moscow`).
+Цены храним в копейках (`integer`), чтобы не ловить ошибки float. HTTP API использует те же имена полей (`*_kopecks`) — см. [api.md](api.md). Даты планов — календарные `date` в часовом поясе офиса (`Europe/Moscow`).
 
 ## ER-обзор
 
@@ -106,7 +106,7 @@ draft → locked → priced → included_in_order
 |--------|--------|
 | `draft` | можно редактировать до cutoff |
 | `locked` | cutoff прошёл, правки запрещены |
-| `priced` | проставлены actual_price / unavailable |
+| `priced` | проставлены `actual_price_kopecks` / `unavailable` |
 | `included_in_order` | вошёл в сводный office_order |
 
 ### `plan_items`
@@ -163,8 +163,8 @@ collecting → locked → exported → placed
 ## Правило цены
 
 1. Пока план `draft`, UI показывает `dishes.price_kopecks` (последний sync). При добавлении в план копируем её в `planned_price_kopecks`.
-2. После cutoff job: для каждой позиции, если блюдо `available` — `actual_price_kopecks = dishes.price_kopecks`; иначе `unavailable = true`, в агрегат не входит.
-3. Дельта для статистики: `actual_price * qty − planned_price * qty` (unavailable можно считать отдельно: «не закуплено»).
+2. После cutoff (job или `POST /api/orders/{date}/cutoff`): для каждой позиции, если блюдо `available` — `actual_price_kopecks = dishes.price_kopecks`; иначе `unavailable = true`, в агрегат не входит.
+3. Дельта для статистики: `actual_price_kopecks * qty − planned_price_kopecks * qty` (unavailable можно считать отдельно: «не закуплено»).
 
 ## Индексы
 

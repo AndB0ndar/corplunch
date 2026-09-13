@@ -56,8 +56,8 @@ kis/
 | `users` | CRUD пользователей и отделов, настройки системы | admin, статистика |
 | `catalog` | upsert блюд, `price_history`, выдача текущего меню | employee, parser, cutoff |
 | `providers` | нормализация внешнего каталога, без знания БД заказов | catalog sync |
-| `planning` | план на дату, qty, planned_price, cutoff-блокировка | employee |
-| `orders` | office_order, агрегация, CSV/XLSX, статус placed | procurement |
+| `planning` | план на дату, qty, `planned_price_kopecks`, cutoff-блокировка | employee |
+| `orders` | office_order, агрегация, CSV/XLSX, ручной cutoff, статус placed | procurement |
 | `stats` | агрегаты за период | procurement, admin |
 | `jobs` | расписание sync каталога и cutoff | инфраструктура |
 
@@ -73,14 +73,16 @@ class FoodProvider(Protocol):
         ...
 ```
 
-`NormalizedDish`:
+`NormalizedDish` (цены сразу в копейках, как в `dishes`):
 
 | Поле | Смысл |
 |------|--------|
 | `external_id` | стабильный id на сайте (`data-product_id`) |
+| `seller_product_id` | `data-seller-product_id`, nullable |
 | `name`, `subtitle` | название и уточнение |
+| `description` | текст карточки, nullable |
 | `category` | `breakfast`, `salad`, `soup`, `main_dish`, … |
-| `price`, `old_price` | текущая и зачёркнутая цена |
+| `price_kopecks`, `old_price_kopecks` | текущая и зачёркнутая цена |
 | `weight_g` | вес |
 | `proteins`, `fats`, `carbs`, `calories` | КБЖУ |
 | `image_url` | абсолютный URL картинки |
@@ -91,23 +93,25 @@ class FoodProvider(Protocol):
 ## Фоновые задачи
 
 1. **Catalog sync** — 1–2 раза в сутки (утро). Пишет/обновляет `dishes`, добавляет строку в `price_history`, блюда, которых нет в свежем HTML, помечает `available=false`.
-2. **Cutoff job** — в настроенное время (по умолчанию 16:00) для **завтрашней** даты: синхронизирует каталог, переводит планы `draft → locked → priced`, заполняет `actual_price` / `unavailable`, собирает `office_order`.
+2. **Cutoff job** — в настроенное время (по умолчанию 16:00) для **завтрашней** даты: синхронизирует каталог, переводит планы `draft → locked → priced → included_in_order`, заполняет `actual_price_kopecks` / `unavailable`, собирает `office_order`.
 
-Ручной `POST /catalog/sync` доступен закупкам и админу, если нужно обновить меню не дожидаясь cron.
+Ручной `POST /api/catalog/sync` доступен закупкам, если нужно обновить меню не дожидаясь cron. Ручной `POST /api/orders/{date}/cutoff` — тот же алгоритм, что у job, для указанной даты (демо, не ждать 16:00).
 
 ## Frontend
 
-Три экрана MVP:
+Экраны MVP:
 
-1. Каталог + календарь плана — сотрудник.
-2. Сводка дня — закупки.
-3. Статистика — закупки/админ.
+1. Вход.
+2. Каталог + календарь плана — сотрудник.
+3. Сводка дня — закупки (в т.ч. «закрыть приём»).
+4. Статистика — закупки/админ.
+5. Пользователи, отделы, настройки — админ.
 
-JWT в заголовке `Authorization: Bearer …` (допустима httpOnly cookie — выбрать один способ и не смешивать). Демо-вход без SSO.
+JWT только в заголовке `Authorization: Bearer …` (без cookie). Демо-вход без SSO.
 
 ## Инфраструктура
 
-Docker Compose MVP: `db`, `api`, `web`. Backend читает `DATABASE_URL`, `JWT_SECRET`, `MEALTY_CITY`, `CUTOFF_TIME`. Frontend проксирует `/api` на backend.
+Docker Compose MVP: `db`, `api`, `web`. Backend читает `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRE_MINUTES` (по умолчанию 480), `MEALTY_CITY`, `CUTOFF_TIME`. Пароли — bcrypt. Frontend проксирует `/api` на backend.
 
 
 ## Принципы командной разработки

@@ -78,7 +78,7 @@ gantt
 
 | Кто | Делает |
 |-----|--------|
-| **Бондарь** | `GET/PUT /plans/{date}`, planned/actual, unavailable, cutoff job |
+| **Бондарь** | `GET/PUT /plans/{date}`, `planned_price_kopecks` / `actual_price_kopecks`, unavailable, cutoff job и `POST /orders/{date}/cutoff` |
 | **Пягай** | текст статусов плана и правила cutoff в [data-model.md](data-model.md) / [roles.md](roles.md) |
 | **Шишков** | календарь, состав плана, бейджи; QA: до 16:00 можно, после — нельзя |
 

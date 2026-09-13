@@ -15,8 +15,8 @@
 | `seller_product_id` | `[data-seller-product_id]`                                                                                                     |
 | `name`              | `.meal-card__name`                                                                                                             |
 | `subtitle`          | `.meal-card__name-note`                                                                                                        |
-| `price`             | `.meal-card__price[data-price]`                                                                                                |
-| `old_price`         | `.meal-card__price-old`                                                                                                        |
+| `price_kopecks`     | `.meal-card__price[data-price]` → в копейки (`× 100`, если на сайте рубли)                                                     |
+| `old_price_kopecks` | `.meal-card__price-old` → то же                                                                                                |
 | `weight_g`          | `.meal-card__weight`                                                                                                           |
 | КБЖУ                | `.meal-card__proteins`, `__fats`, `__carbohydrates`, `__calories`                                                              |
 | описание            | `.meal-card__description`                                                                                                      |
@@ -24,7 +24,7 @@
 | категория           | якоря секций `#breakfast`, `#salad`, `#soup`, `#main_dish`, `#sandwich`, `#dessert`, `#bread`, `#drink`, `#snack` / `#novelty` |
 
 
-Пример живых id: `data-product_id="875"` — «Картофельные ньокки…», цена в `data-price`.
+Пример живых id: `data-product_id="875"` — «Картофельные ньокки…», цена в `data-price`. Провайдер кладёт в `NormalizedDish.price_kopecks` / `old_price_kopecks`, плюс `seller_product_id` и `description` — те же поля, что в `dishes`.
 
 Цены зависят от **города**. В запросе нужно учитывать выбранный город (по умолчанию Москва): cookie/заголовок так же, как делает сайт, либо отдельный параметр провайдера. Город хранится в `settings.mealty_city`.
 
@@ -43,7 +43,7 @@
 CI **не** ходит на mealty.ru.
 
 1. Сохранить урезанную фикстуру HTML (2–3 `.catalog-item` с реальными классами) в `backend/tests/fixtures/mealty_catalog.html`.
-2. Тест: `parse_html(fixture)` → ожидаемые `external_id`, имя, цена, категория.
+2. Тест: `parse_html(fixture)` → ожидаемые `external_id`, имя, `price_kopecks`, категория.
 3. Тест: блюдо пропало между двумя снимками → во втором `available=false`.
 4. Опционально: ручной e2e `pytest -m live` (не в CI).
 
