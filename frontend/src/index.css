@@ -1,0 +1,25 @@
+:root {
+  --paper: #f3eee4;
+  --paper-ink: #2c2a26;
+  --sage: #4f6f5c;
+  --sage-deep: #3d5748;
+  --ochre: #c4a35a;
+  --terracotta: #b85c44;
+  --sans: "Segoe UI", system-ui, sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--paper-ink);
+}
+
+#root {
+  min-height: 100svh;
+}

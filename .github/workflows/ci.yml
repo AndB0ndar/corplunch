@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: corplunch
+          POSTGRES_PASSWORD: corplunch
+          POSTGRES_DB: corplunch_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U corplunch -d corplunch_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+asyncpg://corplunch:corplunch@localhost:5432/corplunch_test
+      JWT_SECRET: test-secret
+      JWT_EXPIRE_MINUTES: "480"
+      MEALTY_CITY: Москва
+      CUTOFF_TIME: "16:00"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Test
+        run: pytest
