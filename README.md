@@ -52,6 +52,7 @@
 | Email | Пароль | Роль |
 |-------|--------|------|
 | `employee@kis.local` | `employee` | сотрудник |
+| `employee2@kis.local` | `employee2` | сотрудник |
 | `procurement@kis.local` | `procurement` | закупки |
 | `admin@kis.local` | `admin` | администратор |
 
@@ -73,7 +74,7 @@ docker compose exec api python -m app.cli seed-users
 docker compose exec api python -m app.cli sync-from-fixture
 ```
 
-- `seed-users` — отделы и три демо-учётки (этап 0).
+- `seed-users` — отделы и демо-учётки, включая двух сотрудников (этап 0).
 - `sync-from-fixture` — каталог из `backend/tests/fixtures/mealty_catalog.html`, без запроса на mealty.ru (этап 1). Для демо без живого сайта.
 
 Цены в API и БД — целые **копейки** (`*_kopecks`); UI делит на 100 и показывает ₽. Авторизация — только `Authorization: Bearer <jwt>`, без cookie.
@@ -85,8 +86,8 @@ docker compose exec api python -m app.cli sync-from-fixture
 Классические роли совмещаются с разработкой (подробно — [docs/team.md](docs/team.md)):
 
 - **Бондарь А.Р.** — тимлид, ведущий разработчик, DevOps (ядро backend, Compose, ревью).
-- **Пягай** — технический писатель и простой backend (docs, users/settings/seed/CSV по шаблону).
-- **Шишков** — frontend и QA (экраны, чек-листы, регресс, фикстура HTML).
+- **Пягай** — технический писатель и простой backend (docs, auth/admin, seed, CLI фикстуры, хелперы лимита/429, pytest по контракту, CSV по шаблону).
+- **Шишков** — frontend и QA (все экраны включая админку, чек-листы, регресс, фикстура HTML).
 
 Сроки и пересечение этапов: [docs/sprints.md](docs/sprints.md). Жизненный цикл и метод разработки: [docs/process.md](docs/process.md).
 
