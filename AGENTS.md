@@ -23,7 +23,7 @@ Fetch a file only when the current task needs it. Do not preload this list.
 | Screens and UI copy | [docs/ui.md](docs/ui.md) |
 | Who writes what | [docs/team.md](docs/team.md) |
 | Stages 0–4 | [docs/sprints.md](docs/sprints.md) |
-| GitHub Flow, DoD | [docs/process.md](docs/process.md) |
+| Процесс и DoD | [docs/process.md](docs/process.md) |
 | Defense demo | [docs/demo.md](docs/demo.md) |
 | Run, seed, stack | [README.md](README.md) |
 
@@ -85,7 +85,7 @@ Demo users: `employee@kis.local` / `employee`, `employee2@kis.local` / `employee
 - SQLAlchemy 2 mapped style, **async** sessions and `asyncpg`. No blocking DB I/O in path handlers.
 - One concern per package (`auth`, `users`, `catalog`, `providers`, `planning`, `orders`, `stats`, `jobs`). Cross-package imports go through small public APIs, not deep internals.
 - `providers` returns `NormalizedDish` and does not know order tables. `catalog` writes dishes. `planning` does not call Mealty.
-- Alembic migrations live in the same PR as the schema change. No manual SQL on the shared database.
+- Alembic migrations live in the same change as the schema. No manual SQL on the shared database.
 - Type hints on public functions. Prefer explicit `str | None` over implicit `Any`.
 
 ### TypeScript / React
@@ -132,9 +132,9 @@ Match [docs/ui.md](docs/ui.md): warm paper-like background, sage accent — not 
 
 ## Git and quality
 
-- Branches `feature/…`, PR into `main`. `main` must come up via Compose.
-- Definition of Done: migration if the schema changed; pytest / QA checklist / explicit manual step in the PR; OpenAPI and docs match code; `docker compose up` from scratch works.
-- Parser PRs that touch selectors must include the HTML-fixture regression.
+- Commit and push to `main`. Feature branches and PRs are optional, not a gate. `main` must come up via Compose.
+- Definition of Done: migration if the schema changed; pytest / QA checklist / explicit manual step; OpenAPI and docs match code; `docker compose up` from scratch works.
+- Parser commits that touch selectors must include the HTML-fixture regression.
 
 ## Out of MVP
 
