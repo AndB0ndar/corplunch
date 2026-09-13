@@ -5,9 +5,12 @@ venv/
 __pycache__/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 node_modules/
 dist/
 build/
 *.pyc
 .DS_Store
 docker-compose.override.yml
+.cursor/
+openspec
