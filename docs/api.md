@@ -4,9 +4,23 @@
 
 Деньги во всех JSON-полях — целые **копейки** (`*_kopecks`). Те же имена, что в [data-model.md](data-model.md). UI делит на 100 и показывает ₽.
 
-Авторизация: только заголовок `Authorization: Bearer <jwt>` на всех методах, кроме логина. Cookie не используем. TTL токена — `JWT_EXPIRE_MINUTES` (по умолчанию 480).
+Авторизация: только заголовок `Authorization: Bearer <jwt>` на всех методах, кроме логина и `GET /api/health`. Cookie не используем. TTL токена — `JWT_EXPIRE_MINUTES` (по умолчанию 480).
 
 Роли: `employee`, `procurement`, `admin`. Где написано «закупки» — достаточно `procurement` или `admin`.
+
+## Служебное
+
+### `GET /api/health`
+
+Без авторизации. Liveness процесса и ping Postgres.
+
+Ответ 200:
+
+```json
+{ "status": "ok", "database": "up" }
+```
+
+503 — `{"detail": "Database unavailable"}`, если API не достучался до БД.
 
 ## Auth и профиль
 
