@@ -6,25 +6,61 @@
 
 Трое в команде: Бондарь А.Р. — ядро и DevOps, Пягай — простой backend и docs, Шишков — React и QA ([team.md](team.md)). Backend — один сервис FastAPI.
 
-```mermaid
-flowchart LR
-  Mealty[mealty.ru HTML]
-  Parser[MealtyProvider]
-  Catalog[(catalog + price_history)]
-  Employee[Сотрудник]
-  Plan[planned_items]
-  DayJob[cutoff job]
-  Snapshot[order_day snapshot]
-  Procurement[Закупки]
+Схема — [C4](https://c4model.com): сначала система как чёрный ящик (контекст), затем процессы из Compose (контейнеры). Пакеты внутри FastAPI — не контейнеры, они в таблице «Модули backend».
 
-  Mealty --> Parser --> Catalog
-  Employee --> Plan
-  Catalog --> Employee
-  Plan --> DayJob
-  Catalog --> DayJob
-  DayJob --> Snapshot
-  Snapshot --> Procurement
+### Контекст (C4, уровень 1)
+
+Кто пользуется CorpLunch и с чем система связана снаружи. Оформление заказа на Mealty **не автоматизируется**: закупки переносят сводку вручную.
+
+```mermaid
+C4Context
+    title CorpLunch — системный контекст
+
+    Enterprise_Boundary(office, "Офис") {
+        Person(employee, "Сотрудник", "Смотрит каталог и составляет свой план на дату доставки")
+        Person(procurement, "Закупки", "Сводка дня, экспорт, cutoff; заказ на Mealty размещает вручную")
+        Person(admin, "Администратор", "Пользователи, отделы, время cutoff, город, лимиты")
+        System(corplunch, "CorpLunch", "Планы сотрудников и сводный заказ офиса по живым ценам каталога")
+    }
+
+    System_Ext(mealty, "mealty.ru", "Публичный HTML-каталог. Корзина, кабинет и оформление заказа — вне MVP")
+
+    Rel(employee, corplunch, "План и меню")
+    Rel(procurement, corplunch, "Сводка, экспорт, sync, cutoff")
+    Rel(admin, corplunch, "Учётки и настройки")
+    Rel(corplunch, mealty, "Читает каталог", "HTTPS, HTML")
+    Rel(procurement, mealty, "Переносит сводку и оформляет заказ вручную")
 ```
+
+- **Сотрудник** видит только свой план; чужие не редактирует никто (`PUT /plans` — только employee).
+- **Закупки** работают со сводкой офиса. Связь с mealty.ru у них ручная, не через API CorpLunch.
+- **CorpLunch → mealty.ru** — только публичная HTML-витрина. Парсер не ходит в корзину и `/cabinet`.
+
+### Контейнеры (C4, уровень 2)
+
+Три процесса Compose: браузерное SPA, один FastAPI, Postgres. Jobs (sync каталога и cutoff) крутятся **в том же процессе**, что и API.
+
+```mermaid
+C4Container
+    title CorpLunch — контейнеры (docker compose: web, api, db)
+
+    Person(users, "Пользователи", "employee / procurement / admin — разные экраны одной SPA")
+
+    Container_Boundary(system, "CorpLunch") {
+        Container(web, "web", "React, TypeScript, Vite", "SPA: вход, каталог и план, сводка дня, статистика, админка. JWT в Authorization, без cookie")
+        Container(api, "api", "Python 3.12, FastAPI, APScheduler", "HTTP API и фоновые задачи. Парсер Mealty, cutoff, экспорт CSV/XLSX")
+        ContainerDb(db, "db", "PostgreSQL", "Пользователи, dishes и price_history, планы, office_order")
+    }
+
+    System_Ext(mealty, "mealty.ru", "Публичный HTML-каталог")
+
+    Rel(users, web, "Экраны в браузере", "HTTPS")
+    Rel(web, api, "JSON, OpenAPI", "HTTPS, Bearer JWT; dev-прокси /api")
+    Rel(api, db, "Читает и пишет", "asyncpg")
+    Rel(api, mealty, "fetch_catalog", "HTTPS GET, HTML")
+```
+
+`web` не ходит в Postgres и на Mealty: только в `api`. `api` — модульный монолит (пакеты `auth`, `catalog`, `planning`, `orders`, …), не набор микросервисов.
 
 ## Структура репозитория (целевая)
 
