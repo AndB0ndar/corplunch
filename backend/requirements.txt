@@ -5,3 +5,5 @@ asyncpg>=0.30.0,<1
 alembic>=1.14.0,<2
 pydantic>=2.10.0,<3
 pydantic-settings>=2.6.0,<3
+bcrypt>=4.2.0,<5
+PyJWT>=2.10.0,<3

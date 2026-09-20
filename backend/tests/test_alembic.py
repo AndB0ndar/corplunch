@@ -12,7 +12,7 @@ BACKEND_ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.migration
-async def test_alembic_creates_departments_only() -> None:
+async def test_alembic_creates_required_tables() -> None:
     async with engine.begin() as conn:
         await conn.execute(text("DROP SCHEMA public CASCADE"))
         await conn.execute(text("CREATE SCHEMA public"))
@@ -26,6 +26,7 @@ async def test_alembic_creates_departments_only() -> None:
         text=True,
         check=False,
     )
+
     assert result.returncode == 0, result.stdout + result.stderr
 
     async with engine.connect() as conn:
@@ -41,5 +42,5 @@ async def test_alembic_creates_departments_only() -> None:
         )
 
     assert "departments" in tables
+    assert "users" in tables
     assert "alembic_version" in tables
-    assert "users" not in tables
