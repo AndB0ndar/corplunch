@@ -26,10 +26,7 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "/departments",
-    response_model=list[DepartmentOut],
-)
+@router.get("/departments", response_model=list[DepartmentOut])
 async def list_departments(
     session: AsyncSession = Depends(get_session),
 ) -> list[Department]:
@@ -61,10 +58,7 @@ async def create_department(
     return department
 
 
-@router.patch(
-    "/departments/{department_id}",
-    response_model=DepartmentOut,
-)
+@router.patch("/departments/{department_id}", response_model=DepartmentOut)
 async def update_department(
     department_id: int,
     payload: DepartmentUpdate,
@@ -89,10 +83,7 @@ async def update_department(
     return department
 
 
-@router.get(
-    "/users",
-    response_model=list[UserOut],
-)
+@router.get("/users", response_model=list[UserOut])
 async def list_users(
     session: AsyncSession = Depends(get_session),
 ) -> list[User]:
@@ -167,10 +158,7 @@ async def create_user(
     return user
 
 
-@router.patch(
-    "/users/{user_id}",
-    response_model=UserOut,
-)
+@router.patch("/users/{user_id}", response_model=UserOut)
 async def update_user(
     user_id: int,
     payload: UserUpdate,
