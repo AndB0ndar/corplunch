@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: corplunch
       POSTGRES_DB: corplunch
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./backend/docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro

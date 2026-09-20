@@ -91,7 +91,7 @@ gantt
   - Команды как в [README.md](../README.md): `docker compose up --build`, порты 5173/8000, таблица демо-учёток.
   - Текст должен совпадать с реальным compose Бондаря. Документ врёт — это баг твоей зоны.
 
-- [ ] **Пакет** `auth/`
+- [x] **Пакет** `auth/`
   - Копировать структуру среза отделов Бондаря (модель / schema / router / pytest), не проектировать заново.
   - `POST /api/auth/login`: тело `{ "email", "password" }` → `{ "access_token", "token_type": "bearer" }`. Неверный пароль — 401.
   - Пароли только bcrypt. JWT в заголовке `Authorization: Bearer …`, cookie не использовать. TTL — `JWT_EXPIRE_MINUTES` (480).
@@ -99,7 +99,7 @@ gantt
   - Зависимости FastAPI: `CurrentUser`, проверка роли (`employee` / `procurement` / `admin`). Все методы кроме login и health требуют Bearer.
   - Неактивный пользователь (`is_active=false`) не логинится.
 
-- [ ] **Дописать admin по образцу отделов**
+- [x] **Дописать admin по образцу отделов**
   - `GET`/`POST /api/admin/departments` уже есть — **не переписывать** с нуля.
   - Добавить `PATCH /api/admin/departments/{id}`: тело `{ "name" }`.
   - Таблица `users` + миграция (поля из [data-model.md](data-model.md): email unique, `password_hash`, `full_name`, role enum, `department_id`, `daily_limit_kopecks`, `is_active`).
@@ -107,7 +107,7 @@ gantt
   - Доступ ко всем `/api/admin/*` — только роль `admin` (403 иначе, 401 без токена).
   - `GET/PUT /api/admin/settings` — **не этот этап**, это этап 1.
 
-- [ ] `seed-users`
+- [x] `seed-users`
   - CLI: `python -m app.cli seed-users`. Создаёт отделы и четыре учётки из README: `employee@kis.local` / `employee`, `employee2@kis.local` / `employee2`, `procurement@kis.local` / `procurement`, `admin@kis.local` / `admin`.
   - Два сотрудника обязательны: без них на сводке некого показывать.
 
