@@ -5,7 +5,9 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, retryDelay: 500 } },
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

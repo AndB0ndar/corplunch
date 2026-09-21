@@ -1,0 +1,32 @@
+[
+  {
+    "external_id": "721",
+    "seller_product_id": "1318",
+    "name": "Солянка мясная",
+    "subtitle": "с тамбовским окороком",
+    "category": "soup",
+    "price_kopecks": 27000,
+    "weight_g": 350,
+    "image_path": "/upload/43/3c/433c7512426ee13b.jpeg"
+  },
+  {
+    "external_id": "510",
+    "seller_product_id": "1122",
+    "name": "Оригинальный салат с томленой говядиной",
+    "subtitle": "и маринованными огурчиками",
+    "category": "salad",
+    "price_kopecks": 34000,
+    "weight_g": 320,
+    "image_path": "/upload/0d/f5/0df5da8012e5a11d.jpeg"
+  },
+  {
+    "external_id": "876",
+    "seller_product_id": "1531",
+    "name": "Котлетки из морепродуктов",
+    "subtitle": "с цветной капустой в соусе из анчоусов и пармезана",
+    "category": "main_dish",
+    "price_kopecks": 41000,
+    "weight_g": 350,
+    "image_path": "/upload/47/0b/470b37ce62d1d798.jpeg"
+  }
+]
