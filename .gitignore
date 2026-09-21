@@ -14,3 +14,7 @@ build/
 docker-compose.override.yml
 .cursor/
 openspec
+
+.qa/
+frontend/test-results/
+frontend/playwright-report/
