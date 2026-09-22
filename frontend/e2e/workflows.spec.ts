@@ -2,12 +2,18 @@ import { expect, test, type Page } from '@playwright/test';
 async function enter(page: Page, role: string) {
   await page.getByRole('button', { name: role, exact: true }).click();
 }
-async function planTab(page: Page) {
-  const button = page.getByRole('button', { name: /^Мой план/ });
-  if (await button.isVisible()) await button.click();
+async function planTab(page: Page, isMobile: boolean) {
+  // isVisible() returns immediately and can miss the tab while login renders.
+  if (isMobile) {
+    const button = page.getByRole('button', { name: /^Мой план/ });
+    await button.click();
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+  }
+  await expect(page.locator('.plan-panel')).toBeVisible();
 }
 test('two employees → cutoff → export → statistics → locked employee plan', async ({
   page,
+  isMobile,
 }) => {
   await page.goto('/');
   await enter(page, 'Сотрудник');
@@ -20,7 +26,7 @@ test('two employees → cutoff → export → statistics → locked employee pla
       exact: true,
     })
     .click();
-  await planTab(page);
+  await planTab(page, isMobile);
   await page.getByRole('button', { name: 'Сохранить план' }).click();
   await expect(page.getByText('✓ План сохранён')).toBeVisible();
   await page.getByRole('button', { name: 'Выйти' }).click();
@@ -28,7 +34,7 @@ test('two employees → cutoff → export → statistics → locked employee pla
   await page
     .getByRole('button', { name: 'Добавить Картофельные ньокки', exact: true })
     .click();
-  await planTab(page);
+  await planTab(page, isMobile);
   await page.getByRole('button', { name: 'Сохранить план' }).click();
   await expect(page.getByText('✓ План сохранён')).toBeVisible();
   await page.getByRole('button', { name: 'Выйти' }).click();
@@ -57,7 +63,7 @@ test('two employees → cutoff → export → statistics → locked employee pla
   ).toBeVisible();
   await page.getByRole('button', { name: 'Выйти' }).click();
   await enter(page, 'Сотрудник');
-  await planTab(page);
+  await planTab(page, isMobile);
   await expect(
     page.getByText('Нет в меню Mealty', { exact: true }),
   ).toBeVisible();
