@@ -32,28 +32,6 @@ def city_id_for(city: str) -> str:
     return city_id
 
 
-def parse_html(html: str) -> list[NormalizedDish]:
-    soup = BeautifulSoup(html, "lxml")
-    by_external_id: dict[str, NormalizedDish] = {}
-
-    for item in soup.select(".catalog-item"):
-        if _has_class(item, "hidden"):
-            continue
-        dish = _parse_card(item)
-        if dish is None:
-            continue
-        existing = by_external_id.get(dish.external_id)
-        if existing is None:
-            by_external_id[dish.external_id] = dish
-            continue
-        if existing.category == "novelty" and dish.category != "novelty":
-            by_external_id[dish.external_id] = existing.model_copy(
-                update={"category": dish.category}
-            )
-
-    return list(by_external_id.values())
-
-
 class MealtyProvider:
     source: str = "mealty"
 
@@ -108,6 +86,28 @@ class MealtyProvider:
                 raise MealtyError(f"Mealty HTTP {response.status_code}")
             return response.text
         raise MealtyError(f"Mealty HTTP {last_status}")
+
+
+def parse_html(html: str) -> list[NormalizedDish]:
+    soup = BeautifulSoup(html, "lxml")
+    by_external_id: dict[str, NormalizedDish] = {}
+
+    for item in soup.select(".catalog-item"):
+        if _has_class(item, "hidden"):
+            continue
+        dish = _parse_card(item)
+        if dish is None:
+            continue
+        existing = by_external_id.get(dish.external_id)
+        if existing is None:
+            by_external_id[dish.external_id] = dish
+            continue
+        if existing.category == "novelty" and dish.category != "novelty":
+            by_external_id[dish.external_id] = existing.model_copy(
+                update={"category": dish.category}
+            )
+
+    return list(by_external_id.values())
 
 
 def _parse_card(item: Tag) -> NormalizedDish | None:
