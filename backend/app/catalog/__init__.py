@@ -1,1 +1,1 @@
-"""Dish catalog. Implemented in later stages."""
+"""Dish catalog: upsert, price history, and the current menu."""

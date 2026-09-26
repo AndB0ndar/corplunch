@@ -43,4 +43,6 @@ async def test_alembic_creates_required_tables() -> None:
 
     assert "departments" in tables
     assert "users" in tables
+    assert "dishes" in tables
+    assert "price_history" in tables
     assert "alembic_version" in tables
