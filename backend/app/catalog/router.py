@@ -7,11 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.deps import CurrentUser, require_procurement
 from app.catalog.models import Dish
 from app.catalog.schemas import CatalogSyncOut, DishOut
-from app.catalog.service import upsert_catalog
+from app.catalog.service import sync_live_catalog
 from app.db import get_session
-from app.providers.mealty import MealtyError, MealtyProvider
+from app.providers.mealty import MealtyError
 from app.users.models import User
-from app.users.quota import assert_catalog_sync_allowed
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -45,16 +44,13 @@ async def sync_catalog(
     _user: Annotated[User, Depends(require_procurement)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> CatalogSyncOut:
-    await assert_catalog_sync_allowed()
-    provider = MealtyProvider()
     try:
-        dishes = await provider.fetch_catalog()
+        result = await sync_live_catalog(session)
     except MealtyError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=str(exc),
         ) from exc
-    result = await upsert_catalog(session, provider.source, dishes)
     return CatalogSyncOut(
         upserted=result.upserted,
         unavailable=result.unavailable,

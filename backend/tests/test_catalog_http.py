@@ -213,7 +213,7 @@ async def test_category_and_name_filters(client: AsyncClient) -> None:
 async def test_procurement_syncs_fixture(client: AsyncClient) -> None:
     _StubProvider.fetches = 0
     token = await _token(client, UserRole.PROCUREMENT)
-    with patch("app.catalog.router.MealtyProvider", _StubProvider):
+    with patch("app.catalog.service.MealtyProvider", _StubProvider):
         response = await client.post("/api/catalog/sync", headers=_auth(token))
     assert response.status_code == 200
     body = response.json()
@@ -228,7 +228,7 @@ async def test_procurement_syncs_fixture(client: AsyncClient) -> None:
 async def test_employee_cannot_sync(client: AsyncClient) -> None:
     _StubProvider.fetches = 0
     token = await _token(client, UserRole.EMPLOYEE)
-    with patch("app.catalog.router.MealtyProvider", _StubProvider):
+    with patch("app.catalog.service.MealtyProvider", _StubProvider):
         response = await client.post("/api/catalog/sync", headers=_auth(token))
     assert response.status_code == 403
     assert "detail" in response.json()
@@ -244,7 +244,7 @@ async def test_mealty_error_leaves_rows_unchanged(client: AsyncClient) -> None:
         available=True,
     )
     token = await _token(client, UserRole.PROCUREMENT)
-    with patch("app.catalog.router.MealtyProvider", _FailingProvider):
+    with patch("app.catalog.service.MealtyProvider", _FailingProvider):
         response = await client.post("/api/catalog/sync", headers=_auth(token))
     assert response.status_code == 502
     assert response.json()["detail"] == "Mealty request failed"
@@ -264,8 +264,8 @@ async def test_quota_refusal_skips_mealty(client: AsyncClient) -> None:
     _StubProvider.fetches = 0
     token = await _token(client, UserRole.PROCUREMENT)
     with (
-        patch("app.catalog.router.assert_catalog_sync_allowed", _deny_quota),
-        patch("app.catalog.router.MealtyProvider", _StubProvider),
+        patch("app.catalog.service.assert_catalog_sync_allowed", _deny_quota),
+        patch("app.catalog.service.MealtyProvider", _StubProvider),
     ):
         response = await client.post("/api/catalog/sync", headers=_auth(token))
     assert response.status_code == 429

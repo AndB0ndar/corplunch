@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.catalog.models import Dish, PriceHistory
 from app.providers.base import NormalizedDish
+from app.providers.mealty import MealtyProvider
+from app.users.quota import assert_catalog_sync_allowed
 
 MOSCOW = ZoneInfo("Europe/Moscow")
 
@@ -50,6 +52,13 @@ async def upsert_catalog(
         unavailable=int(unavailable or 0),
         recorded_at=recorded_at,
     )
+
+
+async def sync_live_catalog(session: AsyncSession) -> CatalogSyncResult:
+    await assert_catalog_sync_allowed()
+    provider = MealtyProvider()
+    dishes = await provider.fetch_catalog()
+    return await upsert_catalog(session, provider.source, dishes)
 
 
 async def _upsert_dishes(

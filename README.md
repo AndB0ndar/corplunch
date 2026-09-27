@@ -85,9 +85,9 @@ docker compose exec api python -m app.cli sync-from-fixture
 
 Классические роли совмещаются с разработкой (подробно — [docs/team.md](docs/team.md)):
 
-- **Бондарь А.Р.** — тимлид, ведущий разработчик, DevOps (ядро backend, Compose, ревью).
-- **Пягай** — технический писатель и простой backend (docs, auth/admin, seed, CLI фикстуры, хелперы лимита/429, pytest по контракту, CSV по шаблону).
-- **Шишков** — frontend и QA (все экраны включая админку, чек-листы, регресс, фикстура HTML).
+- **Бондарь (AndB0ndar)** — тимлид, ведущий разработчик, DevOps (ядро backend, Compose, ревью).
+- **Пягай (Pyaguy4ik)** — технический писатель и простой backend (docs, auth/admin, seed, CLI фикстуры, хелперы лимита/429, pytest по контракту, CSV по шаблону).
+- **Шишков (Alex171228)** — frontend и QA (все экраны включая админку, чек-листы, регресс, фикстура HTML).
 
 Сроки и пересечение этапов: [docs/sprints.md](docs/sprints.md). Жизненный цикл и метод разработки: [docs/process.md](docs/process.md).
 
