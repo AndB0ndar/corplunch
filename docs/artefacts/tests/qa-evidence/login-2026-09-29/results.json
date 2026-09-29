@@ -1,0 +1,124 @@
+{
+  "commit": "4639c7ec2cf2ebb36e7412a5f0d6428f614fcdd6",
+  "scope": "Implemented login, profile, session, role navigation and API authorization",
+  "environment": "Windows; Edge 153.0.4234.48; Playwright desktop 1280x720; real FastAPI + PostgreSQL 16; seeded QA database; no mocks",
+  "stats": {
+    "startTime": "2026-09-29T14:24:42.493Z",
+    "duration": 18026.805,
+    "expected": 11,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "checks": [
+    {
+      "name": "employee: wrong password, real login, role, reload, logout",
+      "status": "passed",
+      "duration_ms": 5969
+    },
+    {
+      "name": "employee2: wrong password, real login, role, reload, logout",
+      "status": "passed",
+      "duration_ms": 2901
+    },
+    {
+      "name": "procurement: wrong password, real login, role, reload, logout",
+      "status": "passed",
+      "duration_ms": 2622
+    },
+    {
+      "name": "admin: wrong password, real login, role, reload, logout",
+      "status": "passed",
+      "duration_ms": 2500
+    },
+    {
+      "name": "no token: GET /api/me returns 401",
+      "status": "passed",
+      "duration_ms": 27
+    },
+    {
+      "name": "no token: GET /api/catalog returns 401",
+      "status": "passed",
+      "duration_ms": 41
+    },
+    {
+      "name": "no token: POST /api/catalog/sync returns 401",
+      "status": "passed",
+      "duration_ms": 14
+    },
+    {
+      "name": "no token: GET /api/admin/users returns 401",
+      "status": "passed",
+      "duration_ms": 12
+    },
+    {
+      "name": "no token: GET /api/admin/departments returns 401",
+      "status": "passed",
+      "duration_ms": 12
+    },
+    {
+      "name": "real tokens identify two distinct employees and enforce admin rights",
+      "status": "passed",
+      "duration_ms": 1345
+    },
+    {
+      "name": "invalid token is rejected",
+      "status": "passed",
+      "duration_ms": 12
+    }
+  ],
+  "observations": [
+    {
+      "account": "employee",
+      "role": "employee",
+      "userId": 1,
+      "loginStatus": 200,
+      "profileStatus": 200,
+      "failedRequests": [
+        {
+          "path": "/api/auth/login",
+          "status": 401
+        }
+      ]
+    },
+    {
+      "account": "employee2",
+      "role": "employee",
+      "userId": 2,
+      "loginStatus": 200,
+      "profileStatus": 200,
+      "failedRequests": [
+        {
+          "path": "/api/auth/login",
+          "status": 401
+        }
+      ]
+    },
+    {
+      "account": "procurement",
+      "role": "procurement",
+      "userId": 3,
+      "loginStatus": 200,
+      "profileStatus": 200,
+      "failedRequests": [
+        {
+          "path": "/api/auth/login",
+          "status": 401
+        }
+      ]
+    },
+    {
+      "account": "admin",
+      "role": "admin",
+      "userId": 4,
+      "loginStatus": 200,
+      "profileStatus": 200,
+      "failedRequests": [
+        {
+          "path": "/api/auth/login",
+          "status": 401
+        }
+      ]
+    }
+  ]
+}
