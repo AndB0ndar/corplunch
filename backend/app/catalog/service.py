@@ -55,7 +55,7 @@ async def upsert_catalog(
 
 
 async def sync_live_catalog(session: AsyncSession) -> CatalogSyncResult:
-    await assert_catalog_sync_allowed()
+    await assert_catalog_sync_allowed(session)
     provider = MealtyProvider()
     dishes = await provider.fetch_catalog()
     return await upsert_catalog(session, provider.source, dishes)

@@ -171,19 +171,19 @@ gantt
 
 ### Пягай
 
-- [ ] `GET` **/** `PUT /api/admin/settings`
-  - Одна строка или key-value: `cutoff_time` (16:00), `timezone` (Europe/Moscow), `mealty_city` (Москва), `daily_limit_kopecks` (null), `catalog_sync_per_day` (2).
+- [x] `GET` **/** `PUT /api/admin/settings`
+  - Одна строка таблицы `settings` (`id=1`): `cutoff_time` (16:00), `timezone` (Europe/Moscow), `mealty_city` (Москва), `daily_limit_kopecks` (null), `catalog_sync_per_day` (2).
   - `PUT` — полная замена этих ключей. Только `admin`. Это **хранение**, не формула cutoff (формулу пишет Бондарь на этапе 2).
 
-- [ ] **CLI** `sync-from-fixture`
+- [x] **CLI** `sync-from-fixture`
   - `python -m app.cli sync-from-fixture`: вызвать парсер Бондаря на `backend/tests/fixtures/mealty_catalog.html` и upsert в БД.
   - Селекторы **не трогать**. Нужно для демо без живого mealty.ru и для наполнения каталога в dev.
 
-- [ ] **Хелперы лимита (422) и квоты sync (429)**
+- [x] **Хелперы лимита (422) и квоты sync (429)**
   - Функции, которые ядро только вызывает: сумма плана > лимита сотрудника/системы → 422; счётчик ручных/job sync за сутки > `catalog_sync_per_day` → 429.
   - Не вшивать это в парсер и не считать cutoff.
 
-- [ ] **Docs каталога под факт кода**
+- [x] **Docs каталога под факт кода**
   - Сверить [api.md](api.md) и [mealty.md](mealty.md) с реальными полями/селекторами. Расхождение — баг docs.
 
 

@@ -290,6 +290,8 @@ Query: `from`, `to` (даты доставки, обязательны), `depart
 
 ### `GET /api/admin/settings` / `PUT /api/admin/settings`
 
+Хранение: одна строка `settings` (`id=1`). `PUT` — полная замена полей ниже. Только `admin`.
+
 ```json
 {
   "cutoff_time": "16:00",
@@ -300,7 +302,7 @@ Query: `from`, `to` (даты доставки, обязательны), `depart
 }
 ```
 
-`PUT` — полная замена этих ключей.
+`PUT` — полная замена этих ключей. `cutoff_time` — `HH:MM` (24h). Квота sync: ручной `POST /catalog/sync` и утренний job делят счётчик за календарные сутки в `timezone`; `sync-from-fixture` квоту не тратит.
 
 ## Коды ошибок (договорённость)
 

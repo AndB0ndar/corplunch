@@ -40,7 +40,9 @@ erDiagram
 | daily_limit_kopecks | int nullable | персональный лимит; иначе системный |
 | is_active | bool | |
 
-### `settings` (одна строка или key-value)
+### `settings` (одна строка, singleton `id=1`)
+
+Хранение — одна строка таблицы `settings` (не key-value). Дефолты сидятся миграцией `0004_settings`. Счётчик живых sync Mealty — таблица `catalog_sync_runs` (`ran_at`); лимит за календарные сутки в `settings.timezone`.
 
 | Ключ | Значение по умолчанию | Смысл |
 |------|----------------------|--------|
@@ -49,6 +51,13 @@ erDiagram
 | `mealty_city` | `Москва` | влияет на цены парсера |
 | `daily_limit_kopecks` | null | общий лимит ₽/сотрудник/день, опционально |
 | `catalog_sync_per_day` | `2` | мягкий лимит запросов к Mealty |
+
+### `catalog_sync_runs`
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| id | PK | |
+| ran_at | timestamptz | момент, когда sync прошёл квоту и пошёл на Mealty |
 
 ### `dishes`
 

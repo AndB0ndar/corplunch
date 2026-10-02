@@ -8,15 +8,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import require_admin
 from app.db import get_session
-from app.users.models import Department, User, UserRole
+from app.users.models import Department, Settings, User, UserRole
 from app.users.schemas import (
     DepartmentCreate,
     DepartmentOut,
     DepartmentUpdate,
+    SettingsOut,
+    SettingsUpdate,
     UserCreate,
     UserOut,
     UserUpdate,
 )
+from app.users.settings_service import get_or_create_settings
 
 
 router = APIRouter(
@@ -214,3 +217,28 @@ async def update_user(
     await session.refresh(user)
 
     return user
+
+
+@router.get("/settings", response_model=SettingsOut)
+async def get_settings(
+    session: AsyncSession = Depends(get_session),
+) -> Settings:
+    settings = await get_or_create_settings(session)
+    await session.commit()
+    return settings
+
+
+@router.put("/settings", response_model=SettingsOut)
+async def put_settings(
+    payload: SettingsUpdate,
+    session: AsyncSession = Depends(get_session),
+) -> Settings:
+    settings = await get_or_create_settings(session)
+    settings.cutoff_time = payload.cutoff_time
+    settings.timezone = payload.timezone
+    settings.mealty_city = payload.mealty_city
+    settings.daily_limit_kopecks = payload.daily_limit_kopecks
+    settings.catalog_sync_per_day = payload.catalog_sync_per_day
+    await session.commit()
+    await session.refresh(settings)
+    return settings

@@ -256,7 +256,7 @@ async def test_mealty_error_leaves_rows_unchanged(client: AsyncClient) -> None:
     assert await _history_count() == 0
 
 
-async def _deny_quota() -> None:
+async def _deny_quota(*_args: object, **_kwargs: object) -> None:
     raise HTTPException(status_code=429, detail="Sync quota exceeded")
 
 

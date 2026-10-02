@@ -15,3 +15,6 @@ async def test_openapi_includes_health_and_departments(client: AsyncClient) -> N
     assert "/api/admin/departments" in paths
     assert "get" in paths["/api/admin/departments"]
     assert "post" in paths["/api/admin/departments"]
+    assert "/api/admin/settings" in paths
+    assert "get" in paths["/api/admin/settings"]
+    assert "put" in paths["/api/admin/settings"]

@@ -127,7 +127,7 @@ async def test_job_upserts_patched_snapshot_once() -> None:
     assert len({row.recorded_at for row in history}) == 1
 
 
-async def _deny_quota() -> None:
+async def _deny_quota(*_args: object, **_kwargs: object) -> None:
     raise HTTPException(status_code=429, detail="Sync quota exceeded")
 
 

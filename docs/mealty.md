@@ -49,7 +49,7 @@
 
 CI **не** ходит на mealty.ru.
 
-1. Сохранить урезанную фикстуру HTML (2–3 `.catalog-item` с реальными классами) в `backend/tests/fixtures/mealty_catalog.html`.
+1. Сохранить урезанную фикстуру HTML (2–3 `.catalog-item` с реальными классами) в `backend/tests/fixtures/mealty_catalog.html`. Ту же фикстуру читает CLI `python -m app.cli sync-from-fixture` (без запроса на mealty.ru).
 2. Тест: `parse_html(fixture)` → ожидаемые `external_id`, имя, `price_kopecks`, категория.
 3. Тест: блюдо пропало между двумя снимками → во втором `available=false`.
 4. Опционально: ручной e2e `pytest -m live` (не в CI).

@@ -35,7 +35,11 @@ from app.auth.deps import require_admin
 from app.catalog.models import Dish, PriceHistory  # noqa: F401
 from app.db import Base, engine
 from app.main import app
-from app.users.models import Department  # noqa: F401
+from app.users.models import (  # noqa: F401
+    CatalogSyncRun,
+    Department,
+    Settings,
+)
 
 
 def _permit_admin() -> None:

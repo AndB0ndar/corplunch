@@ -1,9 +1,13 @@
+import argparse
 import asyncio
+from pathlib import Path
 
 import bcrypt
 from sqlalchemy import select
 
+from app.catalog.service import upsert_catalog
 from app.db import SessionLocal
+from app.providers import parse_html
 from app.users.models import Department, User, UserRole
 
 
@@ -44,6 +48,13 @@ USERS = [
         "department": "Администрация",
     },
 ]
+
+FIXTURE_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "tests"
+    / "fixtures"
+    / "mealty_catalog.html"
+)
 
 
 async def seed_users() -> None:
@@ -100,8 +111,49 @@ async def seed_users() -> None:
     print("seed-users: done")
 
 
+async def sync_from_fixture() -> None:
+    if not FIXTURE_PATH.is_file():
+        raise SystemExit(f"Fixture not found: {FIXTURE_PATH}")
+
+    dishes = parse_html(FIXTURE_PATH.read_text(encoding="utf-8"))
+    if not dishes:
+        raise SystemExit("Fixture produced an empty catalog")
+
+    async with SessionLocal() as session:
+        result = await upsert_catalog(session, "mealty", dishes)
+
+    print(
+        "sync-from-fixture: "
+        f"upserted={result.upserted} "
+        f"unavailable={result.unavailable} "
+        f"recorded_at={result.recorded_at.isoformat()}"
+    )
+
+
 def main() -> None:
-    asyncio.run(seed_users())
+    parser = argparse.ArgumentParser(
+        prog="python -m app.cli",
+        description="CorpLunch backend CLI",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    sub.add_parser(
+        "seed-users",
+        help="Create demo departments and users",
+    )
+    sub.add_parser(
+        "sync-from-fixture",
+        help="Upsert catalog from mealty_catalog.html fixture",
+    )
+
+    args = parser.parse_args()
+
+    if args.command == "seed-users":
+        asyncio.run(seed_users())
+    elif args.command == "sync-from-fixture":
+        asyncio.run(sync_from_fixture())
+    else:
+        parser.error(f"Unknown command: {args.command}")
 
 
 if __name__ == "__main__":

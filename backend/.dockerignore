@@ -3,6 +3,8 @@ __pycache__
 .ruff_cache
 .venv
 venv
-tests
+tests/test_*.py
+tests/conftest.py
+tests/**/__pycache__
 *.pyc
 .DS_Store
