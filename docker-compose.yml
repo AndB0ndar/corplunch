@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: corplunch
       POSTGRES_DB: corplunch
     ports:
-      - "5432:5432"
+      - "${DB_BIND:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./backend/docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
@@ -18,19 +18,19 @@ services:
 
   api:
     build: ./backend
-    env_file: .env
+    env_file: ${APP_ENV_FILE:-.env}
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "${API_BIND:-8000}:8000"
 
   web:
     build: ./frontend
     environment:
       API_PROXY_TARGET: http://api:8000
     ports:
-      - "5173:5173"
+      - "${WEB_BIND:-5173}:5173"
     volumes:
       - ./frontend:/app
       - web_node_modules:/app/node_modules

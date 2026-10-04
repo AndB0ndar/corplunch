@@ -1,7 +1,7 @@
 import { useAction } from '../useAction';
 import { useState } from 'react';
 import { useIsMutating, useQuery } from '@tanstack/react-query';
-import { ErrorNotice, Loading } from '../components';
+import { Empty, ErrorNotice, Loading } from '../components';
 import { money, roles, rublesToKopecks } from '../format';
 import { useSession } from '../session';
 import type { Department, Role, Settings, User } from '../types';
@@ -19,6 +19,8 @@ export function Admin() {
     queryFn: () => api.settings(),
   });
   const [editing, setEditing] = useState<User | 'new' | null>(null);
+  const [message, setMessage] = useState('');
+  const canEdit = !savingUser && !!departments.data;
   return (
     <>
       <div className="page-heading">
@@ -30,106 +32,181 @@ export function Admin() {
           <p className="muted">Всё, что нужно для общего обеда в офисе.</p>
         </div>
       </div>
-      <ErrorNotice error={users.error ?? departments.error ?? settings.error} />
-      {users.isPending || departments.isPending || settings.isPending ? (
-        <Loading />
-      ) : (
-        <div className="admin-layout">
-          <div>
-            <section className="panel">
-              <div className="section-heading">
-                <div>
-                  <h2>Команда</h2>
-                  <p className="muted">
-                    {users.data?.length ?? 0} пользователей
-                  </p>
-                </div>
-                <button
-                  className="primary"
-                  disabled={savingUser}
-                  onClick={() => setEditing('new')}
-                >
-                  + Сотрудник
-                </button>
+      <div className="admin-layout">
+        <div>
+          <section className="panel" aria-labelledby="team-title">
+            <div className="section-heading">
+              <div>
+                <h2 id="team-title">Команда</h2>
+                {users.data && (
+                  <p className="muted">{users.data.length} пользователей</p>
+                )}
               </div>
-              {editing && (
-                <UserForm
-                  key={editing === 'new' ? 'new' : editing.id}
-                  editing={editing === 'new' ? undefined : editing}
-                  departments={departments.data ?? []}
-                  onClose={() => setEditing(null)}
-                  selfId={user.id}
-                />
-              )}
-              <div className="table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Сотрудник</th>
-                      <th>Роль / отдел</th>
-                      <th>Лимит в день</th>
-                      <th>Статус</th>
-                      <th>
-                        <span className="sr-only">Действия</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.data?.map((u) => (
-                      <tr key={u.id}>
-                        <td>
-                          <b>{u.full_name}</b>
-                          <small>{u.email}</small>
-                        </td>
-                        <td>
-                          {roles[u.role]}
-                          <small>{u.department?.name ?? 'Без отдела'}</small>
-                        </td>
-                        <td>
-                          {u.daily_limit_kopecks === null
-                            ? 'Общий'
-                            : money(u.daily_limit_kopecks)}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${u.is_active === false ? 'inactive' : ''}`}
-                          >
-                            {u.is_active === false ? 'Отключён' : 'Активен'}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="quiet"
-                            aria-label={`Изменить ${u.full_name}`}
-                            disabled={savingUser}
-                            onClick={() => setEditing(u)}
-                          >
-                            Изменить
-                          </button>
-                        </td>
+              <button
+                className="primary"
+                disabled={!canEdit || !users.data}
+                onClick={() => {
+                  setEditing('new');
+                  setMessage('');
+                }}
+              >
+                + Сотрудник
+              </button>
+            </div>
+            <LoadError
+              error={users.error}
+              label="пользователей"
+              retry={() => users.refetch()}
+              pending={users.isFetching}
+            />
+            <p className="success-message" role="status">
+              {message}
+            </p>
+            {editing && departments.data && (
+              <UserForm
+                key={editing === 'new' ? 'new' : editing.id}
+                editing={editing === 'new' ? undefined : editing}
+                departments={departments.data}
+                onClose={() => setEditing(null)}
+                onSaved={() => {
+                  setEditing(null);
+                  setMessage('Сотрудник сохранён.');
+                }}
+                selfId={user.id}
+              />
+            )}
+            {users.isPending ? (
+              <Loading />
+            ) : users.data?.length === 0 ? (
+              <Empty>Сотрудников пока нет. Добавьте первого сотрудника.</Empty>
+            ) : (
+              users.data && (
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Сотрудник</th>
+                        <th>Роль / отдел</th>
+                        <th>Лимит в день</th>
+                        <th>Статус</th>
+                        <th>
+                          <span className="sr-only">Действия</span>
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {users.data.map((u) => (
+                        <tr key={u.id}>
+                          <td>
+                            <b>{u.full_name}</b>
+                            <small>{u.email}</small>
+                          </td>
+                          <td>
+                            {roles[u.role]}
+                            <small>{u.department?.name ?? 'Без отдела'}</small>
+                          </td>
+                          <td>
+                            {u.daily_limit_kopecks === null
+                              ? 'Общий'
+                              : money(u.daily_limit_kopecks)}
+                          </td>
+                          <td>
+                            <span
+                              className={`badge ${u.is_active === false ? 'inactive' : ''}`}
+                            >
+                              {u.is_active === undefined
+                                ? 'Не указан'
+                                : u.is_active
+                                  ? 'Активен'
+                                  : 'Отключён'}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="quiet"
+                              aria-label={`Изменить ${u.full_name}`}
+                              disabled={!canEdit}
+                              onClick={() => {
+                                setEditing(u);
+                                setMessage('');
+                              }}
+                            >
+                              Изменить
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            )}
+          </section>
+          {departments.data ? (
+            <Departments departments={departments.data} />
+          ) : (
+            <section className="panel" aria-label="Отделы">
+              <h2>Отделы</h2>
+              {departments.isPending && <Loading />}
+              <LoadError
+                error={departments.error}
+                label="отделов"
+                retry={() => departments.refetch()}
+                pending={departments.isFetching}
+              />
             </section>
-            <Departments departments={departments.data ?? []} />
-          </div>
-          {settings.data && <SettingsForm settings={settings.data} />}
+          )}
         </div>
-      )}
+        {settings.data ? (
+          <SettingsForm settings={settings.data} />
+        ) : (
+          <aside className="panel settings" aria-label="Настройки">
+            <p className="eyebrow">ПРАВИЛА ОФИСА</p>
+            <h2>Настройки</h2>
+            {settings.isPending && <Loading />}
+            <LoadError
+              error={settings.error}
+              label="настроек"
+              retry={() => settings.refetch()}
+              pending={settings.isFetching}
+            />
+          </aside>
+        )}
+      </div>
     </>
   );
+}
+function LoadError({
+  error,
+  label,
+  retry,
+  pending,
+}: {
+  error: Error | null;
+  label: string;
+  retry: () => Promise<unknown>;
+  pending: boolean;
+}) {
+  return error ? (
+    <div>
+      <ErrorNotice error={error} />
+      <button type="button" disabled={pending} onClick={() => void retry()}>
+        Повторить загрузку {label}
+      </button>
+    </div>
+  ) : null;
 }
 function UserForm({
   editing,
   departments,
   onClose,
+  onSaved,
   selfId,
 }: {
   editing?: User;
   departments: Department[];
   onClose: () => void;
+  onSaved: () => void;
   selfId: number;
 }) {
   const { api } = useSession();
@@ -145,7 +222,7 @@ function UserForm({
       ? ''
       : String(editing.daily_limit_kopecks / 100),
   );
-  const [active, setActive] = useState(editing?.is_active ?? true);
+  const [active, setActive] = useState(editing ? editing.is_active : true);
   const action = useAction(async () => {
     await api.saveUser(
       {
@@ -155,11 +232,11 @@ function UserForm({
         role,
         department_id: department ? Number(department) : null,
         daily_limit_kopecks: rublesToKopecks(limit),
-        is_active: active,
+        ...(active === undefined ? {} : { is_active: active }),
       },
       editing?.id,
     );
-    onClose();
+    onSaved();
   }, ['save-user', editing?.id]);
   return (
     <form
@@ -175,6 +252,7 @@ function UserForm({
           Имя и фамилия
           <input
             required
+            maxLength={255}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -184,6 +262,7 @@ function UserForm({
           <input
             type="email"
             required
+            maxLength={320}
             disabled={!!editing}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -237,14 +316,30 @@ function UserForm({
             onChange={(e) => setLimit(e.target.value)}
           />
         </label>
-        <label className="checkbox">
-          <input
-            type="checkbox"
-            checked={active}
-            onChange={(e) => setActive(e.target.checked)}
-          />
-          Учётная запись активна
-        </label>
+        {active === undefined ? (
+          <label>
+            Статус учётной записи
+            <select
+              value=""
+              onChange={(e) => setActive(e.target.value === 'true')}
+            >
+              <option value="" disabled>
+                Не указан — оставить без изменения
+              </option>
+              <option value="true">Активен</option>
+              <option value="false">Отключён</option>
+            </select>
+          </label>
+        ) : (
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={active}
+              onChange={(e) => setActive(e.target.checked)}
+            />
+            Учётная запись активна
+          </label>
+        )}
       </fieldset>
       <ErrorNotice error={action.error} />
       <div className="form-actions">
@@ -272,6 +367,7 @@ function Departments({ departments }: { departments: Department[] }) {
   return (
     <section className="panel">
       <h2>Отделы</h2>
+      {departments.length === 0 && <p className="muted">Отделов пока нет.</p>}
       <div className="department-list">
         {departments.map((d) => (
           <button
@@ -399,7 +495,8 @@ function SettingsForm({ settings }: { settings: Settings }) {
             Обновлений каталога в сутки
             <input
               type="number"
-              min="1"
+              min="0"
+              max="100"
               step="1"
               required
               value={quota}

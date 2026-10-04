@@ -16,7 +16,7 @@ export type UserInput = {
   role: Role;
   department_id: number | null;
   daily_limit_kopecks: number | null;
-  is_active: boolean;
+  is_active?: boolean;
 };
 export type Settings = {
   cutoff_time: string;

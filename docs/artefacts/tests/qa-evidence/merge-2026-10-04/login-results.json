@@ -1,0 +1,125 @@
+{
+  "baselineCommit": "37b5dcc",
+  "version": "working tree with merged admin changes and quota range fix",
+  "stats": {
+    "startTime": "2026-10-04T15:02:52.616Z",
+    "duration": 15300.118,
+    "expected": 11,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "employee: wrong password, real login, role, reload, logout",
+      "status": "passed",
+      "observations": [
+        {
+          "account": "employee",
+          "role": "employee",
+          "userId": 1,
+          "loginStatus": 200,
+          "profileStatus": 200,
+          "failedRequests": [
+            {
+              "path": "/api/auth/login",
+              "status": 401
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "employee2: wrong password, real login, role, reload, logout",
+      "status": "passed",
+      "observations": [
+        {
+          "account": "employee2",
+          "role": "employee",
+          "userId": 2,
+          "loginStatus": 200,
+          "profileStatus": 200,
+          "failedRequests": [
+            {
+              "path": "/api/auth/login",
+              "status": 401
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "procurement: wrong password, real login, role, reload, logout",
+      "status": "passed",
+      "observations": [
+        {
+          "account": "procurement",
+          "role": "procurement",
+          "userId": 3,
+          "loginStatus": 200,
+          "profileStatus": 200,
+          "failedRequests": [
+            {
+              "path": "/api/auth/login",
+              "status": 401
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "admin: wrong password, real login, role, reload, logout",
+      "status": "passed",
+      "observations": [
+        {
+          "account": "admin",
+          "role": "admin",
+          "userId": 4,
+          "loginStatus": 200,
+          "profileStatus": 200,
+          "failedRequests": [
+            {
+              "path": "/api/auth/login",
+              "status": 401
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "no token: GET /api/me returns 401",
+      "status": "passed",
+      "observations": []
+    },
+    {
+      "title": "no token: GET /api/catalog returns 401",
+      "status": "passed",
+      "observations": []
+    },
+    {
+      "title": "no token: POST /api/catalog/sync returns 401",
+      "status": "passed",
+      "observations": []
+    },
+    {
+      "title": "no token: GET /api/admin/users returns 401",
+      "status": "passed",
+      "observations": []
+    },
+    {
+      "title": "no token: GET /api/admin/departments returns 401",
+      "status": "passed",
+      "observations": []
+    },
+    {
+      "title": "real tokens identify two distinct employees and enforce admin rights",
+      "status": "passed",
+      "observations": []
+    },
+    {
+      "title": "invalid token is rejected",
+      "status": "passed",
+      "observations": []
+    }
+  ]
+}

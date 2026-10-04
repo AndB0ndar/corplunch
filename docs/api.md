@@ -45,7 +45,8 @@
   "full_name": "Иван Сотрудник",
   "role": "employee",
   "department": { "id": 1, "name": "Разработка" },
-  "daily_limit_kopecks": null
+  "daily_limit_kopecks": null,
+  "is_active": true
 }
 ```
 

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-// Explicit live suite: requires the separately seeded qa/login.compose.yml.
+// Explicit live suite: uses the main Compose with tests/.env.test and seed-users.
 // No page.route(), demo buttons, dependency overrides, or mocked responses.
 const accounts = [
   { account: 'employee', role: 'employee', label: 'Сотрудник' },

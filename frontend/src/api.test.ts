@@ -6,6 +6,27 @@ afterEach(() => {
   setToken(null);
 });
 describe('HTTP contract', () => {
+  it('uses PUT with every settings field and preserves zero and null limits', async () => {
+    const fetch = vi.fn().mockImplementation(async () => new Response('{}'));
+    vi.stubGlobal('fetch', fetch);
+    setToken('admin-test-token');
+    for (const limit of [0, null]) {
+      const settings = {
+        cutoff_time: '15:30',
+        timezone: 'Europe/Moscow',
+        mealty_city: 'Москва',
+        daily_limit_kopecks: limit,
+        catalog_sync_per_day: 2,
+      };
+      await liveApi.saveSettings(settings);
+      const [path, init] = fetch.mock.calls.at(-1)!;
+      expect(path).toBe('/api/admin/settings');
+      expect(init.method).toBe('PUT');
+      expect(init.credentials).toBe('omit');
+      expect(init.headers.get('Authorization')).toBe('Bearer admin-test-token');
+      expect(JSON.parse(init.body)).toEqual(settings);
+    }
+  });
   it('does not let a delayed 401 from an old session clear the new token', async () => {
     let complete!: (response: Response) => void;
     vi.stubGlobal(

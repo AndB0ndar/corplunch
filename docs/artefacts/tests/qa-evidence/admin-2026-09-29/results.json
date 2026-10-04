@@ -1,0 +1,23 @@
+{
+  "baselineCommit": "a65958f",
+  "version": "working tree with admin frontend changes",
+  "mode": "live API, isolated QA database",
+  "stats": {
+    "startTime": "2026-09-29T14:47:17.649Z",
+    "duration": 8604.08,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "status": "passed",
+  "observations": {
+    "createdStatus": 201,
+    "statusFieldReturned": false,
+    "disabledLogin": 401,
+    "nameEditKeptDisabled": true,
+    "enabledLogin": 200,
+    "role": "procurement",
+    "limitKopecks": 0
+  }
+}

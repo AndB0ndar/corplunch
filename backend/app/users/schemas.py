@@ -4,7 +4,6 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
 Role = Literal["employee", "procurement", "admin"]
 
 _CUTOFF_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
@@ -44,6 +43,7 @@ class UserOut(BaseModel):
     role: Role
     department: DepartmentOut | None
     daily_limit_kopecks: int | None
+    is_active: bool
 
 
 class UserCreate(BaseModel):

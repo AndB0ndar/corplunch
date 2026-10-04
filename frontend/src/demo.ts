@@ -458,7 +458,10 @@ export const demoApi: AppApi = {
       department:
         state.departments.find((d) => d.id === input.department_id) ?? null,
       daily_limit_kopecks: input.daily_limit_kopecks,
-      is_active: input.is_active,
+      is_active:
+        input.is_active ??
+        state.users.find((u) => u.id === id)?.is_active ??
+        true,
     };
     if (id === undefined) state.users.push(user);
     else state.users = state.users.map((u) => (u.id === id ? user : u));

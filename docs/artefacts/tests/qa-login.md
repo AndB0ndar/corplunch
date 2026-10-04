@@ -56,8 +56,8 @@
 Нужны запущенный Docker Desktop, Node/npm и Microsoft Edge. Из корня проекта:
 
 ```powershell
-docker compose -f qa/login.compose.yml up -d --build
-docker compose -f qa/login.compose.yml exec -T api python -m app.cli seed-users
+docker compose --env-file tests/.env.test up -d --build db api
+docker compose --env-file tests/.env.test exec -T api python -m app.cli seed-users
 ```
 
 В первом терминале запустить frontend:
@@ -79,13 +79,12 @@ $env:PLAYWRIGHT_BASE_URL = 'http://127.0.0.1:5181'
 npx playwright test --config=playwright.live.config.ts
 ```
 
-Health должен показать `status=ok`, `database=up`. Новый JSON-отчёт появится в `.qa/login-results.json`, скриншоты — в `frontend/test-results/live-login/`; эти рабочие результаты исключены из Git. Сохранённые доказательства выше относятся только к прогону 29.09.2026. Для Chromium нужно установить его через Playwright и не задавать `PLAYWRIGHT_CHANNEL`.
+Health должен показать `status=ok`, `database=up`. Новый JSON-отчёт появится в `tests/results/login-results.json`, скриншоты — в `frontend/test-results/live-login/`; эти рабочие результаты исключены из Git. Сохранённые доказательства выше относятся только к прогону 29.09.2026. Для Chromium нужно установить его через Playwright и не задавать `PLAYWRIGHT_CHANNEL`.
 
 После проверки остановить Vite через Ctrl+C и из корня выполнить:
 
 ```powershell
-docker compose -f qa/login.compose.yml stop
+docker compose --env-file tests/.env.test stop
 ```
 
-QA Compose использует отдельный проект и базу, фиксированные учебные секреты и API только на `127.0.0.1:18000`; он не предназначен для развёртывания сервиса. Запуск через `sh -c` применяет штатные миграции и запускает `app.main:app`, избегая зависимости от Windows-переносов строк в shell-файле. Это не полная приёмка основного `docker-compose.yml`.
-
+Для повторения используется основной `docker-compose.yml` с `tests/.env.test`: отдельный проект и том БД, учебные секреты, API на `127.0.0.1:18000`, штатный entrypoint. Подробности — [тестовый стенд](../../../tests/README.md). Исторический прогон выше выполнялся на прежнем отдельном QA Compose и не является полной приёмкой основного Compose.

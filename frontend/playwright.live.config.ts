@@ -5,7 +5,10 @@ export default defineConfig({
   testMatch: 'login.spec.ts',
   workers: 1,
   retries: 0,
-  reporter: [['list'], ['json', { outputFile: '../.qa/login-results.json' }]],
+  reporter: [
+    ['list'],
+    ['json', { outputFile: '../tests/results/login-results.json' }],
+  ],
   outputDir: 'test-results/live-login',
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5181',

@@ -1,0 +1,23 @@
+{
+  "baselineCommit": "a65958f",
+  "version": "working tree including UserOut.is_active fix",
+  "mode": "live API, isolated QA database",
+  "stats": {
+    "startTime": "2026-09-30T16:22:56.757Z",
+    "duration": 7471.058,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "status": "passed",
+  "observations": {
+    "createdStatus": 201,
+    "statusFieldReturned": true,
+    "disabledLogin": 401,
+    "nameEditKeptDisabled": true,
+    "enabledLogin": 200,
+    "role": "procurement",
+    "limitKopecks": 0
+  }
+}

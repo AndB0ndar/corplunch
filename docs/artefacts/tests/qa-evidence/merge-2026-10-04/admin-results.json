@@ -1,0 +1,43 @@
+{
+  "baselineCommit": "37b5dcc",
+  "version": "working tree with merged admin changes and quota range fix",
+  "stats": {
+    "startTime": "2026-10-04T15:02:39.63Z",
+    "duration": 9980.323,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "live settings persist full PUT and quota boundaries after reload",
+      "status": "passed",
+      "observations": [
+        {
+          "fullPut": true,
+          "persistedAfterReload": true,
+          "quotaZero": true,
+          "quotaHundred": true,
+          "emptyLimit": null,
+          "quotaAboveHundredRejected": true
+        }
+      ]
+    },
+    {
+      "title": "live admin returns active status and preserves disabled users during edits",
+      "status": "passed",
+      "observations": [
+        {
+          "createdStatus": 201,
+          "statusFieldReturned": true,
+          "disabledLogin": 401,
+          "nameEditKeptDisabled": true,
+          "enabledLogin": 200,
+          "role": "procurement",
+          "limitKopecks": 0
+        }
+      ]
+    }
+  ]
+}

@@ -17,5 +17,6 @@ openspec
 .opencode/
 
 .qa/
+tests/results/
 frontend/test-results/
 frontend/playwright-report/
