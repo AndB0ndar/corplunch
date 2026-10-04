@@ -35,6 +35,7 @@
 | [docs/mealty.md](docs/mealty.md) | Парсер каталога Mealty |
 | [docs/team.md](docs/team.md) | Тимлид, писатель, QA; кто что пишет |
 | [docs/sprints.md](docs/sprints.md) | Этапы 0–4, сроки ~9 недель |
+| [docs/tests.md](docs/tests.md) | Где лежат pytest, Vitest и Playwright; когда появляются |
 | [docs/process.md](docs/process.md) | Жизненный цикл ПО, Scrum-lite, коммиты в `main` |
 | [docs/ui.md](docs/ui.md) | Черновик экранов и тон интерфейса |
 | [docs/demo.md](docs/demo.md) | Сценарий защиты / демо |

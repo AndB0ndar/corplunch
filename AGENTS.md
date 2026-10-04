@@ -23,6 +23,7 @@ Fetch a file only when the current task needs it. Do not preload this list.
 | Screens and UI copy | [docs/ui.md](docs/ui.md) |
 | Who writes what | [docs/team.md](docs/team.md) |
 | Stages 0–4 | [docs/sprints.md](docs/sprints.md) |
+| Tests | [docs/tests.md](docs/tests.md) |
 | Процесс и DoD | [docs/process.md](docs/process.md) |
 | Defense demo | [docs/demo.md](docs/demo.md) |
 | Run, seed, stack | [README.md](README.md) |
