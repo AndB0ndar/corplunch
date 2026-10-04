@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from app.catalog.models import Dish, PriceHistory  # noqa: F401
 from app.config import settings
 from app.db import Base
+from app.planning.models import MealPlan, PlanItem  # noqa: F401
 from app.users.models import (  # noqa: F401
     CatalogSyncRun,
     Department,

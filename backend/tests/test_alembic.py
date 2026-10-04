@@ -47,4 +47,44 @@ async def test_alembic_creates_required_tables() -> None:
     assert "price_history" in tables
     assert "settings" in tables
     assert "catalog_sync_runs" in tables
+    assert "meal_plans" in tables
+    assert "plan_items" in tables
     assert "alembic_version" in tables
+
+    async with engine.connect() as conn:
+        meal_columns = set(
+            (
+                await conn.execute(
+                    text(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_name = 'meal_plans'"
+                    )
+                )
+            ).scalars()
+        )
+        constraint_names = set(
+            (
+                await conn.execute(
+                    text(
+                        "SELECT conname FROM pg_constraint WHERE conname IN ("
+                        "'uq_meal_plans_user_id_delivery_date', "
+                        "'uq_plan_items_plan_id_dish_id', "
+                        "'ck_plan_items_qty_min')"
+                    )
+                )
+            ).scalars()
+        )
+        status_index = await conn.scalar(
+            text(
+                "SELECT 1 FROM pg_indexes "
+                "WHERE indexname = 'ix_meal_plans_delivery_date_status'"
+            )
+        )
+
+    assert "office_order_id" not in meal_columns
+    assert constraint_names == {
+        "uq_meal_plans_user_id_delivery_date",
+        "uq_plan_items_plan_id_dish_id",
+        "ck_plan_items_qty_min",
+    }
+    assert status_index == 1

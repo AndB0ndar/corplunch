@@ -126,7 +126,7 @@ draft → locked → priced → included_in_order
 | plan_id | FK | |
 | dish_id | FK | |
 | qty | int ≥ 1 | |
-| planned_price_kopecks | int | цена на момент добавления/последнего sync в draft |
+| planned_price_kopecks | int | копия `dishes.price_kopecks` на момент успешного `PUT` |
 | actual_price_kopecks | int nullable | цена после cutoff |
 | unavailable | bool | блюда не было в свежем каталоге |
 
@@ -180,5 +180,6 @@ collecting → locked → exported → placed
 - `dishes (source, external_id)` unique
 - `meal_plans (user_id, delivery_date)` unique
 - `meal_plans (delivery_date, status)`
+- `plan_items (plan_id, dish_id)` unique
 - `price_history (dish_id, recorded_at)`
 - `office_orders (delivery_date)` unique

@@ -35,6 +35,7 @@ from app.auth.deps import require_admin
 from app.catalog.models import Dish, PriceHistory  # noqa: F401
 from app.db import Base, engine
 from app.main import app
+from app.planning.models import MealPlan, PlanItem  # noqa: F401
 from app.users.models import (  # noqa: F401
     CatalogSyncRun,
     Department,

@@ -1,1 +1,1 @@
-"""Employee meal plans. Implemented in later stages."""
+"""Employee meal plans for a delivery date."""

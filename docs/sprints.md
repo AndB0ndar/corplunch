@@ -164,7 +164,7 @@ gantt
   - `GET /api/catalog` — все авторизованные. Query: `category?`, `q?`, `available_only` (default true). JSON как в [api.md](api.md).
   - `POST /api/catalog/sync` — закупки/админ: `fetch_catalog` + upsert. Ответ `{ upserted, unavailable, recorded_at }`. 502 если Mealty/парсер упал; 429 если превышена квота (хелпер Пягая).
 
-- [ ] **Job sync**
+- [x] **Job sync**
   - APScheduler: 1–2 раза в сутки (утро). Тот же код, что ручной sync. Таймаут и один retry. Не чаще лимита из settings.
 
 
@@ -209,15 +209,13 @@ gantt
 
 ---
 
-
-
 ## Этап 2 — планирование (~2–2,5 недели, недели 3–5)
 
 Старт: есть `dish_id`, не ждать идеального парсера. Цель: сотрудник собирает план; после cutoff — 403 и актуальные цены.
 
 ### Бондарь
 
-- [ ] `GET` **/** `PUT /api/plans/{date}`
+- [x] `GET` **/** `PUT /api/plans/{date}`
   - Пакет `planning/`. Дата в URL — `YYYY-MM-DD` (дата **доставки**), пояс `Europe/Moscow`.
   - `GET`: свой план (employee) или любой по `?user_id=` (закупки/админ). Нет плана — пустой draft, `editable` по cutoff.
   - `PUT`: тело `{ "items": [{ "dish_id", "qty" }] }` — полная замена. Только **свой** план и только роль `employee`. Админ чужие планы не редактирует.
