@@ -32,11 +32,14 @@ $env:PLAYWRIGHT_CHANNEL='msedge'
 npx playwright test --config=playwright.live.config.ts
 npx playwright test --config=playwright.admin-live.config.ts
 npx playwright test --config=playwright.plans-live.config.ts
+npx playwright test --config=playwright.cutoff-live.config.ts
 ```
 
 JSON-результаты — `tests/results/` (игнорируются Git), скриншоты — `frontend/test-results/`. Для Chromium вместо установленного Edge выполнить `npx playwright install chromium` и убрать `PLAYWRIGHT_CHANNEL`. Демонстрационные пользователи и пароли — в корневом README. Live-сценарии создают тестовых сотрудников/отделы; настройки после проверки восстанавливаются.
 
 Проверка плана использует каталог из локальной HTML-фикстуры, сохраняет блюдо через UI и проверяет состав/цены после перезагрузки. Исходный состав восстанавливается через API. `sync-from-fixture` не обращается к Mealty.
+
+Проверка cutoff временно задаёт ближайшее время закрытия на изолированном стенде, сохраняет план нового тестового сотрудника и ожидает настоящий переход через границу. Проверяет блокировку уже открытого UI с несохранёнными изменениями и ответ `PUT /api/plans/{date}` → 403. Занимает до двух минут; запускать последовательно с другими live-проверками, поскольку настройки общие. В `finally` восстанавливает настройки и отключает тестового сотрудника; его план остаётся в тестовой базе. Результат — `tests/results/cutoff-results.json`.
 
 Если нужен web в Docker, запустить `docker compose --env-file tests/.env.test up -d --build web`. Адрес — `http://127.0.0.1:15173`; для Playwright задать этот `PLAYWRIGHT_BASE_URL` вместо 5181.
 

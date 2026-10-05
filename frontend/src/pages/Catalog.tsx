@@ -1,7 +1,15 @@
 import { useAction } from '../useAction';
 import { useEffect, useState } from 'react';
 import { useIsMutating, useQuery, useQueryClient } from '@tanstack/react-query';
-import { categories, dateLabel, money, shiftDate, today } from '../format';
+import {
+  categories,
+  dateLabel,
+  planDay,
+  money,
+  shiftDate,
+  today,
+} from '../format';
+import { PLAN_CLOSED_MESSAGE } from '../api';
 import {
   DatePicker,
   Empty,
@@ -27,7 +35,8 @@ export function Catalog() {
   const plan = useQuery({
     queryKey: ['plan', date],
     queryFn: () => api.plan(date),
-    refetchInterval: dirty ? false : 30000,
+    // Check server editability even while a local draft is unsaved.
+    refetchInterval: 10000,
   });
   useEffect(() => {
     const leave = (event: BeforeUnloadEvent) => {
@@ -67,7 +76,7 @@ export function Catalog() {
         .toLocaleLowerCase('ru')
         .includes(search.toLocaleLowerCase('ru')),
   );
-  return (
+  const renderHeader = (total?: number) => (
     <>
       <div className="page-heading">
         <div>
@@ -79,7 +88,18 @@ export function Catalog() {
             Выбирайте сегодня — наслаждайтесь в день доставки.
           </p>
         </div>
-        <DatePicker date={date} onChange={chooseDate} disabled={saving} />
+        <div className="plan-calendar">
+          <DatePicker
+            date={date}
+            onChange={chooseDate}
+            disabled={saving}
+            compact
+          />
+          <div className="header-plan-total" aria-label="Сумма плана">
+            <span>Сумма плана</span>
+            <strong>{total === undefined ? '—' : money(total)}</strong>
+          </div>
+        </div>
       </div>
       <div className="mobile-tabs">
         <button aria-pressed={!mobilePlan} onClick={() => setMobilePlan(false)}>
@@ -89,6 +109,11 @@ export function Catalog() {
           Мой план {dirty ? '•' : ''}
         </button>
       </div>
+    </>
+  );
+  return (
+    <>
+      {(!plan.data || catalog.isPending) && renderHeader()}
       <ErrorNotice error={catalog.error ?? plan.error} />
       {catalog.isPending || plan.isPending ? (
         <Loading />
@@ -102,6 +127,7 @@ export function Catalog() {
             dirty={dirty}
             onDirty={setDirty}
             mobilePlan={mobilePlan}
+            renderHeader={renderHeader}
           >
             <div className="catalog-tools">
               <label className="search">
@@ -228,6 +254,7 @@ function PlanEditor({
   onDirty,
   mobilePlan,
   children,
+  renderHeader,
 }: {
   plan: Plan;
   dishes: Dish[];
@@ -236,6 +263,7 @@ function PlanEditor({
   onDirty: (value: boolean) => void;
   mobilePlan: boolean;
   children: ReactNode;
+  renderHeader: (total: number) => ReactNode;
 }) {
   const { api, user } = useSession();
   const client = useQueryClient();
@@ -248,6 +276,7 @@ function PlanEditor({
     if (!editable) {
       setDraft(null);
       onDirty(false);
+      setSaved(false);
     }
   }, [editable, onDirty]);
   const total = items.reduce(
@@ -301,15 +330,14 @@ function PlanEditor({
     <EditorContext.Provider
       value={{ add, editable: editable && !save.isPending, items }}
     >
+      {renderHeader(total)}
+      {!editable && (
+        <div className="notice plan-closed" role="status">
+          {PLAN_CLOSED_MESSAGE}
+        </div>
+      )}
       <div className={`catalog-layout ${mobilePlan ? 'show-plan' : ''}`}>
-        <section className="catalog-section">
-          {!editable && (
-            <div className="notice">
-              Приём заказов на эту дату закрыт. Изменить состав уже нельзя.
-            </div>
-          )}
-          {children}
-        </section>
+        <section className="catalog-section">{children}</section>
         <aside className="plan-panel">
           <div className="plan-title">
             <span className="eyebrow">ВАШ ОБЕД</span>
@@ -317,7 +345,8 @@ function PlanEditor({
               {editable ? 'Приём открыт' : 'Приём закрыт'}
             </span>
           </div>
-          <h2>План на {dateLabel(date)}</h2>
+          <h2>План на {planDay(date)}</h2>
+          <p className="muted">{dateLabel(date)}</p>
           <p className="muted">
             {editable
               ? 'Сохраните состав, когда всё выберете.'
@@ -342,14 +371,17 @@ function PlanEditor({
                         )
                       )}
                     </span>
-                    {item.actual_price_kopecks !== null &&
-                      item.actual_price_kopecks !==
-                        item.planned_price_kopecks && (
-                        <small className="ochre">
-                          Цена изменилась: {money(item.planned_price_kopecks)} →{' '}
-                          {money(item.actual_price_kopecks)}
-                        </small>
-                      )}
+                    {!item.unavailable && (
+                      <PriceChange
+                        planned={item.planned_price_kopecks}
+                        current={
+                          plan.status === 'draft'
+                            ? (dishes.find((d) => d.id === item.dish_id)
+                                ?.price_kopecks ?? item.planned_price_kopecks)
+                            : item.actual_price_kopecks
+                        }
+                      />
+                    )}
                   </div>
                   <div className="quantity">
                     <button
@@ -443,5 +475,20 @@ function PlanEditor({
         </aside>
       </div>
     </EditorContext.Provider>
+  );
+}
+function PriceChange({
+  planned,
+  current,
+}: {
+  planned: number;
+  current: number | null;
+}) {
+  if (current === null || current === planned) return null;
+  return (
+    <small className="price-change ochre">
+      {current > planned ? '↑ Цена выросла' : '↓ Цена снизилась'}:{' '}
+      {money(planned)} → {money(current)}
+    </small>
   );
 }

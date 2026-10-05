@@ -41,6 +41,26 @@ export function dateLabel(date: string, weekday = false) {
     ...(weekday ? ({ weekday: 'long' } as const) : {}),
   }).format(new Date(`${date}T12:00:00Z`));
 }
+export function planDay(date: string) {
+  const days = [
+    'воскресенье',
+    'понедельник',
+    'вторник',
+    'среду',
+    'четверг',
+    'пятницу',
+    'субботу',
+  ];
+  return days[new Date(`${date}T12:00:00Z`).getUTCDay()];
+}
+export function compactDateLabel(date: string) {
+  return new Intl.DateTimeFormat('ru-RU', {
+    timeZone: 'Europe/Moscow',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(new Date(`${date}T12:00:00Z`));
+}
 export function rublesToKopecks(value: string): number | null {
   if (!value.trim()) return null;
   if (!/^\d+(?:[.,]\d{1,2})?$/.test(value.trim()))

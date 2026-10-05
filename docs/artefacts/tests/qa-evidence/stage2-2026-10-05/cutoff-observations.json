@@ -1,0 +1,17 @@
+{
+  "deliveryDate": "2026-10-06",
+  "cutoff_time": "20:05",
+  "timezone": "Europe/Moscow",
+  "before": {
+    "http": 200,
+    "editable": true,
+    "qty": 1
+  },
+  "after": {
+    "http": 403,
+    "editable": false,
+    "qty": 1
+  },
+  "unsavedQty": 2,
+  "uiLocked": true
+}

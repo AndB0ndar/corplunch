@@ -1,6 +1,9 @@
 import { getToken, setToken } from './token';
 import type { AppApi } from './types';
 
+export const PLAN_CLOSED_MESSAGE =
+  'Приём заказов на эту дату закрыт. Изменить состав уже нельзя.';
+
 export class ApiError extends Error {
   readonly status: number;
   constructor(status: number, message: string) {
@@ -10,7 +13,7 @@ export class ApiError extends Error {
 }
 const messages: Record<number, string> = {
   401: 'Сессия завершена или неверная почта / пароль. Войдите снова.',
-  403: 'Действие недоступно: проверьте права и время закрытия приёма.',
+  403: 'Недостаточно прав для этого действия.',
   404: 'Запись не найдена. Обновите страницу.',
   409: 'Данные изменились. Обновите страницу и проверьте состав.',
   422: 'Проверьте введённые данные и дневной лимит.',
@@ -64,9 +67,11 @@ export async function request<T>(
     }
     throw new ApiError(
       response.status,
-      typeof detail === 'string' && /[а-яё]/i.test(detail)
-        ? detail
-        : (messages[response.status] ??
+      response.status === 403 && detail === 'Cutoff passed'
+        ? PLAN_CLOSED_MESSAGE
+        : typeof detail === 'string' && /[а-яё]/i.test(detail)
+          ? detail
+          : (messages[response.status] ??
             'Не удалось выполнить запрос. Попробуйте снова.'),
     );
   }

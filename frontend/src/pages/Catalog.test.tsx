@@ -12,7 +12,7 @@ import { Catalog } from './Catalog';
 import { SessionContext } from '../session';
 import { demoApi } from '../demo';
 import { ApiError } from '../api';
-import { shiftDate, today } from '../format';
+import { planDay, shiftDate, today } from '../format';
 import type { AppApi, Dish, Plan } from '../types';
 
 const date = shiftDate(today(), 2);
@@ -171,7 +171,7 @@ it('uses the same current draft price in the line and total even when editing ha
     }),
   });
   await screen.findByRole('heading', {
-    name: `План на ${new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(new Date(`${date}T12:00:00Z`))}`,
+    name: `План на ${planDay(date)}`,
   });
   const panel = within(screen.getByRole('complementary'));
   expect(panel.queryByText(/^410\s₽$/)).not.toBeInTheDocument();

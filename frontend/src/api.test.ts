@@ -1,11 +1,28 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { liveApi, request } from './api';
+import { liveApi, PLAN_CLOSED_MESSAGE, request } from './api';
 import { getToken, setToken } from './token';
 afterEach(() => {
   vi.unstubAllGlobals();
   setToken(null);
 });
 describe('HTTP contract', () => {
+  it('translates cutoff 403 without confusing it with a role denial', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response('{"detail":"Cutoff passed"}', { status: 403 }),
+      )
+      .mockResolvedValueOnce(
+        new Response('{"detail":"Forbidden"}', { status: 403 }),
+      );
+    vi.stubGlobal('fetch', fetch);
+    await expect(liveApi.savePlan('2026-10-07', [])).rejects.toThrow(
+      PLAN_CLOSED_MESSAGE,
+    );
+    await expect(liveApi.savePlan('2026-10-07', [])).rejects.toThrow(
+      'Недостаточно прав для этого действия.',
+    );
+  });
   it('uses PUT with every settings field and preserves zero and null limits', async () => {
     const fetch = vi.fn().mockImplementation(async () => new Response('{}'));
     vi.stubGlobal('fetch', fetch);

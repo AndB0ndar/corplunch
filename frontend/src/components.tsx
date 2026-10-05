@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { dateLabel, money, shiftDate } from './format';
+import { compactDateLabel, dateLabel, money, shiftDate } from './format';
 
 export function ErrorNotice({ error }: { error: Error | null }) {
   return error ? (
@@ -22,10 +22,12 @@ export function DatePicker({
   date,
   onChange,
   disabled = false,
+  compact = false,
 }: {
   date: string;
   onChange: (date: string) => void;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   return (
     <div className="date-picker">
@@ -38,7 +40,7 @@ export function DatePicker({
         ←
       </button>
       <label>
-        <span>{dateLabel(date, true)}</span>
+        <span>{compact ? compactDateLabel(date) : dateLabel(date, true)}</span>
         <input
           aria-label="Дата доставки"
           disabled={disabled}
