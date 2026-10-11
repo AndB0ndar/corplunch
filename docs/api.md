@@ -189,6 +189,31 @@ CSV: колонки `external_id, name, qty, unit_price_kopecks, line_total_kope
 
 Доступ: закупки. Идемпотентно, если день уже `locked` / `exported` / `placed` (200 без изменений).
 
+Ответ 200:
+
+```json
+{
+  "delivery_date": "2026-10-14",
+  "status": "locked",
+  "already_closed": false,
+  "sync": "ok",
+  "plans_closed": 2,
+  "items_unavailable": 1
+}
+```
+
+Поля ответа:
+
+- `sync`: `ok` — живой sync Mealty внутри cutoff прошёл; `skipped` — Mealty недоступен / HTML не распарсился / пустой снимок, либо день уже закрыт и нового похода не было. При `skipped` каталог не меняется, цены берутся из последнего сохранённого снимка.
+- `plans_closed` — сколько планов переведено в `included_in_order` этим вызовом; при no-op — 0.
+- `items_unavailable` — сколько позиций дня получили `unavailable = true`; при no-op — 0.
+
+Квота: sync внутри cutoff — best-effort, пишет строку в `catalog_sync_runs` (честный учёт походов на Mealty), но не блокируется дневным лимитом; `429` остаётся поведением только ручного `POST /api/catalog/sync`.
+
+400 `Empty day` — на дату нет ни одной позиции ни в одном плане (пустой состав при lock); job такой день молча пропускает.
+
+Ручной cutoff разрешён и до естественного дедлайна (демо не ждёт 16:00); после закрытия правки `PUT /api/plans/{date}` запрещены по статусу (403 `Cutoff passed`).
+
 ### `POST /api/orders/{date}/place`
 
 Тело необязательно. Ставит `placed`, пишет кто и когда.

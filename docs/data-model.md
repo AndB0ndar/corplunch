@@ -59,6 +59,8 @@ erDiagram
 | id | PK | |
 | ran_at | timestamptz | момент, когда sync прошёл квоту и пошёл на Mealty |
 
+Cutoff-sync (job закрытия дня и ручной `POST /api/orders/{date}/cutoff`) тоже пишет строку до похода на Mealty, но не блокируется лимитом `catalog_sync_per_day`: день обязан закрыться всегда; счётчик учитывает его для последующих `429`.
+
 ### `dishes`
 
 | Поле | Тип | Описание |

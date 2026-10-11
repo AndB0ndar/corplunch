@@ -40,6 +40,10 @@ class MealPlan(Base):
             "delivery_date",
             "status",
         ),
+        Index(
+            "ix_meal_plans_office_order_id",
+            "office_order_id",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -52,6 +56,10 @@ class MealPlan(Base):
             native_enum=False,
         ),
         nullable=False,
+    )
+    office_order_id: Mapped[int | None] = mapped_column(
+        ForeignKey("office_orders.id"),
+        nullable=True,
     )
 
     items: Mapped[list[PlanItem]] = relationship(

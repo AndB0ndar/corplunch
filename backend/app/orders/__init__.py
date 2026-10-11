@@ -1,1 +1,1 @@
-"""Office orders. Implemented in later stages."""
+"""Office orders: day cutoff (orchestrator, router, snapshot)."""

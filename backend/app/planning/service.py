@@ -37,7 +37,8 @@ def _now(tz: ZoneInfo) -> datetime:
     return datetime.now(tz)
 
 
-def _deadline(delivery_date: date, settings: Settings) -> datetime:
+def cutoff_deadline(delivery_date: date, settings: Settings) -> datetime:
+    """Edit deadline: (D − 1 day) + cutoff_time in the office timezone."""
     hour_text, minute_text = settings.cutoff_time.split(":", maxsplit=1)
     previous = delivery_date - timedelta(days=1)
     tz = ZoneInfo(settings.timezone)
@@ -63,7 +64,7 @@ def is_editable(
         now = now.replace(tzinfo=tz)
     else:
         now = now.astimezone(tz)
-    clock_open = now < _deadline(delivery_date, settings)
+    clock_open = now < cutoff_deadline(delivery_date, settings)
     status_open = plan_status is None or plan_status == PlanStatus.DRAFT
     return clock_open and status_open
 

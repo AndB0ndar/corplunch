@@ -8,6 +8,8 @@ Quota semantics (stage 1 choice, aligned with docs/api.md + sprints):
   (they both call `sync_live_catalog` → this helper).
 - A run is recorded when the gate passes (about to hit Mealty), not only on success.
 - `sync-from-fixture` bypasses this helper (no live Mealty request).
+- The cutoff path records its run via `record_catalog_sync_run` without the
+  gate: the delivery day must always close, but the attempt is still counted.
 """
 
 from datetime import datetime
@@ -19,6 +21,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.users.models import CatalogSyncRun, Settings, User
 from app.users.settings_service import get_or_create_settings
+
+
+async def record_catalog_sync_run(session: AsyncSession) -> None:
+    """Record a sync run without the quota gate (cutoff's best-effort sync).
+
+    The cutoff sync is a real Mealty request, so it is counted in
+    `catalog_sync_runs` exactly like a gated attempt, but the daily limit
+    must never block the day from closing.
+    """
+    settings = await get_or_create_settings(session)
+    now = datetime.now(ZoneInfo(settings.timezone))
+    session.add(CatalogSyncRun(ran_at=now))
+    await session.commit()
 
 
 async def assert_catalog_sync_allowed(session: AsyncSession) -> None:

@@ -9,7 +9,11 @@ from sqlalchemy import func, select
 from app.catalog.models import Dish, PriceHistory
 from app.db import SessionLocal
 from app.jobs.catalog import run_catalog_sync
-from app.jobs.scheduler import CATALOG_SYNC_JOB_ID, create_scheduler
+from app.jobs.scheduler import (
+    CATALOG_SYNC_JOB_ID,
+    CUTOFF_JOB_ID,
+    create_scheduler,
+)
 from app.providers import MealtyError, NormalizedDish, parse_html
 
 FIXTURE = Path(__file__).parent / "fixtures" / "mealty_catalog.html"
@@ -83,16 +87,15 @@ async def _history_count() -> int:
     return int(count or 0)
 
 
-async def test_scheduler_next_run_is_upcoming_eight_moscow() -> None:
+async def test_scheduler_registers_catalog_and_cutoff_jobs() -> None:
     _StubProvider.fetches = 0
     scheduler = create_scheduler()
     with patch("app.catalog.service.MealtyProvider", _StubProvider):
         scheduler.start()
         try:
-            jobs = scheduler.get_jobs()
-            assert len(jobs) == 1
-            job = jobs[0]
-            assert job.id == CATALOG_SYNC_JOB_ID
+            jobs = {job.id: job for job in scheduler.get_jobs()}
+            assert set(jobs) == {CATALOG_SYNC_JOB_ID, CUTOFF_JOB_ID}
+            job = jobs[CATALOG_SYNC_JOB_ID]
             assert job.next_run_time is not None
             actual = job.next_run_time.astimezone(MOSCOW)
             expected = _next_eight_moscow(datetime.now(MOSCOW))

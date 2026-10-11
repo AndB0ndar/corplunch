@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.catalog.models import Dish, PriceHistory
 from app.providers.base import NormalizedDish
 from app.providers.mealty import MealtyProvider
-from app.users.quota import assert_catalog_sync_allowed
+from app.users.quota import assert_catalog_sync_allowed, record_catalog_sync_run
 
 MOSCOW = ZoneInfo("Europe/Moscow")
 
@@ -54,8 +54,21 @@ async def upsert_catalog(
     )
 
 
-async def sync_live_catalog(session: AsyncSession) -> CatalogSyncResult:
-    await assert_catalog_sync_allowed(session)
+async def sync_live_catalog(
+    session: AsyncSession,
+    *,
+    enforce_quota: bool = True,
+) -> CatalogSyncResult:
+    """Fetch the live Mealty catalog and upsert it.
+
+    `enforce_quota=False` is the cutoff path: the run is still recorded in
+    `catalog_sync_runs` (honest accounting of Mealty hits), but the daily
+    limit cannot reject it — the delivery day must always close.
+    """
+    if enforce_quota:
+        await assert_catalog_sync_allowed(session)
+    else:
+        await record_catalog_sync_run(session)
     provider = MealtyProvider()
     dishes = await provider.fetch_catalog()
     return await upsert_catalog(session, provider.source, dishes)
