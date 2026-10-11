@@ -1,21 +1,34 @@
+# --- Secrets and surroundings ---
 .env
 .env.local
+
+# --- Python ---
 .venv/
 venv/
 __pycache__/
+*.pyc
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# --- Frontend / Node ---
 node_modules/
 dist/
 build/
-*.pyc
-.DS_Store
-docker-compose.override.yml
-.cursor/
-openspec
-.opencode/
 
+# --- Docker Compose ---
+docker-compose.override.yml
+
+# --- macOS ---
+.DS_Store
+
+# --- IDE and agency tools ---
+.cursor/
+.opencode/
+.pi/
+openspec
+
+# --- QA and test artifacts ---
 .qa/
 tests/results/
 frontend/test-results/
