@@ -10,7 +10,6 @@ from app.db import SessionLocal
 from app.providers import parse_html
 from app.users.models import Department, User, UserRole
 
-
 DEPARTMENTS = [
     "Разработка",
     "Закупки",
@@ -50,10 +49,7 @@ USERS = [
 ]
 
 FIXTURE_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "tests"
-    / "fixtures"
-    / "mealty_catalog.html"
+    Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "mealty_catalog.html"
 )
 
 
@@ -63,9 +59,7 @@ async def seed_users() -> None:
 
         for name in DEPARTMENTS:
             department = await session.scalar(
-                select(Department).where(
-                    Department.name == name
-                )
+                select(Department).where(Department.name == name)
             )
 
             if department is None:
@@ -78,11 +72,7 @@ async def seed_users() -> None:
             departments[name] = department
 
         for data in USERS:
-            user = await session.scalar(
-                select(User).where(
-                    User.email == data["email"]
-                )
-            )
+            user = await session.scalar(select(User).where(User.email == data["email"]))
 
             if user is not None:
                 continue
@@ -97,9 +87,7 @@ async def seed_users() -> None:
                 password_hash=password_hash,
                 full_name=data["full_name"],
                 role=data["role"],
-                department_id=departments[
-                    data["department"]
-                ].id,
+                department_id=departments[data["department"]].id,
                 daily_limit_kopecks=None,
                 is_active=True,
             )

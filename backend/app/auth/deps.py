@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import jwt
@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.db import get_session
 from app.users.models import User
-
 
 bearer_scheme = HTTPBearer(
     auto_error=False,
@@ -55,9 +54,7 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         ) from None
 
-    user = await session.scalar(
-        select(User).where(User.id == user_id)
-    )
+    user = await session.scalar(select(User).where(User.id == user_id))
 
     if user is None or not user.is_active:
         raise HTTPException(
@@ -100,10 +97,7 @@ async def require_procurement(
 
 
 def create_access_token(user: User) -> str:
-    expires_at = (
-        datetime.now(timezone.utc)
-        + timedelta(minutes=settings.jwt_expire_minutes)
-    )
+    expires_at = datetime.now(UTC) + timedelta(minutes=settings.jwt_expire_minutes)
 
     payload = {
         "sub": str(user.id),

@@ -320,6 +320,40 @@ async def test_cutoff_second_call_is_idempotent_noop() -> None:
     }
 
 
+async def test_cutoff_snapshot_immune_to_later_sync() -> None:
+    dishes = await _seed_fixture_catalog()
+    dish = next(iter(dishes.values()))
+    u = await _user("immune@test.local")
+    await _plan(u, DELIVERY, [(dish.id, 2, dish.price_kopecks)])
+
+    with patch("app.catalog.service.MealtyProvider", _FailingProvider):
+        await _run(DELIVERY)
+
+    _order_before, items_before = await _stored_order(DELIVERY)
+    line_before = items_before[0]
+
+    # A later successful sync reprices the whole catalog.
+    repriced = [
+        parsed.model_copy(update={"price_kopecks": parsed.price_kopecks + 5000})
+        for parsed in _parsed_fixture()
+    ]
+    async with SessionLocal() as session:
+        await upsert_catalog(session, "mealty", repriced)
+
+    # The catalog really changed …
+    async with SessionLocal() as session:
+        fresh = await session.get(Dish, dish.id)
+        assert fresh is not None
+        assert fresh.price_kopecks == dish.price_kopecks + 5000
+
+    # … but the closed order's snapshot did not.
+    _order_after, items_after = await _stored_order(DELIVERY)
+    (line_after,) = items_after
+    assert line_after.qty == line_before.qty
+    assert line_after.unit_price_kopecks == line_before.unit_price_kopecks
+    assert line_after.line_total_kopecks == line_before.line_total_kopecks
+
+
 async def test_cutoff_nothing_to_close_without_items() -> None:
     await _seed_fixture_catalog()
     u = await _user("quiet@test.local")

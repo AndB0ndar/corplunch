@@ -1,6 +1,4 @@
 import bcrypt
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -21,7 +19,6 @@ from app.users.schemas import (
 )
 from app.users.settings_service import get_or_create_settings
 
-
 router = APIRouter(
     prefix="/admin",
     tags=["admin"],
@@ -33,9 +30,7 @@ router = APIRouter(
 async def list_departments(
     session: AsyncSession = Depends(get_session),
 ) -> list[Department]:
-    result = await session.execute(
-        select(Department).order_by(Department.id)
-    )
+    result = await session.execute(select(Department).order_by(Department.id))
 
     return list(result.scalars().all())
 
@@ -90,9 +85,7 @@ async def update_department(
 async def list_users(
     session: AsyncSession = Depends(get_session),
 ) -> list[User]:
-    result = await session.execute(
-        select(User).order_by(User.id)
-    )
+    result = await session.execute(select(User).order_by(User.id))
 
     return list(result.scalars().all())
 
@@ -108,9 +101,7 @@ async def create_user(
 ) -> User:
     email = payload.email.strip().lower()
 
-    existing = await session.scalar(
-        select(User).where(User.email == email)
-    )
+    existing = await session.scalar(select(User).where(User.email == email))
 
     if existing is not None:
         raise HTTPException(

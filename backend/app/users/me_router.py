@@ -3,7 +3,6 @@ from fastapi import APIRouter
 from app.auth import CurrentUser
 from app.users.schemas import MeResponse
 
-
 router = APIRouter(
     tags=["auth"],
 )

@@ -1,16 +1,10 @@
 from httpx import AsyncClient
 
-from app.db import SessionLocal
-from app.main import app
-from app.users.models import User, UserRole
-
 
 async def test_admin_users_requires_auth(
     client: AsyncClient,
 ) -> None:
-    response = await client.get(
-        "/api/admin/users"
-    )
+    response = await client.get("/api/admin/users")
 
     assert response.status_code == 401
 

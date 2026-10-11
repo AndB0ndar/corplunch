@@ -80,8 +80,7 @@ def _auth(token: str) -> dict[str, str]:
 async def _run_count() -> int:
     async with SessionLocal() as session:
         return int(
-            await session.scalar(select(func.count()).select_from(CatalogSyncRun))
-            or 0
+            await session.scalar(select(func.count()).select_from(CatalogSyncRun)) or 0
         )
 
 
