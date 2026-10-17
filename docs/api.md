@@ -185,7 +185,7 @@ CSV: колонки `external_id, name, qty, unit_price_kopecks, line_total_kope
 
 ### `POST /api/orders/{date}/cutoff`
 
-Ручное закрытие дня: тот же алгоритм, что у cutoff job, для указанной даты доставки (sync каталога → планы `draft → locked → priced → included_in_order` → `office_order` в `locked`). Нужен для демо, чтобы не ждать 16:00.
+Ручное закрытие дня: тот же алгоритм, что у cutoff job, для указанной даты доставки (best-effort sync каталога → stamp `draft|locked → priced` → `office_order` в `locked` + планы `priced → included_in_order`). Нужен для демо, чтобы не ждать 16:00.
 
 Доступ: закупки. Идемпотентно, если день уже `locked` / `exported` / `placed` (200 без изменений).
 

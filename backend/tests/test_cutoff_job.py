@@ -196,8 +196,8 @@ async def test_tick_swallows_per_date_errors(
         return await real_run_cutoff(session, delivery_date)
 
     monkeypatch.setattr(cutoff_job, "run_cutoff", flaky)
-    with patch("app.catalog.service.MealtyProvider", _FailingProvider):
-        await cutoff_job.run_day_cutoff_tick()
+    # Use _tick so FIXED_NOW keeps TODAY/YESTERDAY inside the lookback window.
+    await _tick(monkeypatch, now=FIXED_NOW)
 
     orders = await _orders_by_date()
     assert orders == {TODAY: "locked"}

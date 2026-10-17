@@ -2,7 +2,9 @@
 
 import os
 from collections.abc import AsyncIterator
+from dataclasses import dataclass
 
+import bcrypt
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -33,7 +35,7 @@ from sqlalchemy import text
 
 from app.auth.deps import require_admin
 from app.catalog.models import Dish, PriceHistory  # noqa: F401
-from app.db import Base, engine
+from app.db import Base, SessionLocal, engine
 from app.main import app
 from app.orders.models import OfficeOrder, OfficeOrderItem  # noqa: F401
 from app.planning.models import MealPlan, PlanItem  # noqa: F401
@@ -41,6 +43,8 @@ from app.users.models import (  # noqa: F401
     CatalogSyncRun,
     Department,
     Settings,
+    User,
+    UserRole,
 )
 
 
@@ -92,3 +96,83 @@ async def client() -> AsyncIterator[AsyncClient]:
 async def admin_client(client: AsyncClient) -> AsyncIterator[AsyncClient]:
     app.dependency_overrides[require_admin] = _permit_admin
     yield client
+
+
+@dataclass(frozen=True, slots=True)
+class BearerAuth:
+    """Logged-in user for contract tests: token, headers, user_id, role."""
+
+    token: str
+    user_id: int
+    role: UserRole
+    email: str
+
+    @property
+    def headers(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self.token}"}
+
+
+async def _login_role(
+    client: AsyncClient,
+    role: UserRole,
+    *,
+    email: str | None = None,
+    password: str = "secret",
+) -> BearerAuth:
+    email = email or f"{role.value}@fixture.test"
+    password_hash = bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt(),
+    ).decode("utf-8")
+    async with SessionLocal() as session:
+        user = User(
+            email=email,
+            password_hash=password_hash,
+            full_name=f"{role.value.title()} Fixture",
+            role=role,
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        user_id = user.id
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert response.status_code == 200, response.text
+    token = response.json()["access_token"]
+    return BearerAuth(token=token, user_id=user_id, role=role, email=email)
+
+
+@pytest.fixture
+async def employee_auth(client: AsyncClient) -> BearerAuth:
+    """Bearer for role=employee (Pyagay stage 2 shared fixture)."""
+    return await _login_role(client, UserRole.EMPLOYEE)
+
+
+@pytest.fixture
+async def procurement_auth(client: AsyncClient) -> BearerAuth:
+    """Bearer for role=procurement."""
+    return await _login_role(client, UserRole.PROCUREMENT)
+
+
+@pytest.fixture
+async def admin_auth(client: AsyncClient) -> BearerAuth:
+    """Bearer for role=admin."""
+    return await _login_role(client, UserRole.ADMIN)
+
+
+@pytest.fixture
+async def employee_headers(employee_auth: BearerAuth) -> dict[str, str]:
+    return employee_auth.headers
+
+
+@pytest.fixture
+async def procurement_headers(procurement_auth: BearerAuth) -> dict[str, str]:
+    return procurement_auth.headers
+
+
+@pytest.fixture
+async def admin_headers(admin_auth: BearerAuth) -> dict[str, str]:
+    return admin_auth.headers

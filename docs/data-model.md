@@ -107,7 +107,7 @@ Cutoff-sync (job закрытия дня и ручной `POST /api/orders/{date
 | office_order_id | FK nullable | после сборки дня |
 | unique | (user_id, delivery_date) | |
 
-Статусы плана:
+Статусы плана (enum в коде, цепочка контракта):
 
 ```
 draft → locked → priced → included_in_order
@@ -115,10 +115,12 @@ draft → locked → priced → included_in_order
 
 | Статус | Когда |
 |--------|--------|
-| `draft` | можно редактировать до cutoff |
-| `locked` | cutoff прошёл, правки запрещены |
-| `priced` | проставлены `actual_price_kopecks` / `unavailable` |
-| `included_in_order` | вошёл в сводный office_order |
+| `draft` | можно редактировать, пока дедлайн не прошёл и статус ещё `draft` |
+| `locked` | промежуточный «правки закрыты, цены ещё не проставлены»; stamp принимает `draft` и `locked` |
+| `priced` | проставлены `actual_price_kopecks` / `unavailable` (`apply_actual_prices`) |
+| `included_in_order` | вошёл в сводный `office_order` (финал cutoff) |
+
+Алгоритм cutoff (job и `POST /api/orders/{date}/cutoff`) в одном проходе: проверка идемпотентности → best-effort sync каталога → `draft|locked → priced` → создать `office_order` в `locked` и агрегат позиций с `unavailable=false` → `priced → included_in_order`. На happy path план обычно не останавливается в `locked`: `draft → priced → included_in_order`.
 
 ### `plan_items`
 
@@ -146,7 +148,7 @@ draft → locked → priced → included_in_order
 | placed_at | timestamptz nullable | |
 | placed_by_user_id | FK nullable | |
 
-Статусы сводного заказа:
+Статусы сводного заказа (enum в коде):
 
 ```
 collecting → locked → exported → placed
@@ -154,10 +156,12 @@ collecting → locked → exported → placed
 
 | Статус | Когда |
 |--------|--------|
-| `collecting` | ещё идут draft-планы |
-| `locked` | cutoff, планы зафиксированы |
-| `exported` | хотя бы раз скачали CSV/XLSX |
-| `placed` | закупки подтвердили размещение на Mealty |
+| `collecting` | концептуально «до cutoff»; строка `office_orders` на дату ещё не создана (или зарезервировано под контракт `place` на этапе 3) |
+| `locked` | день закрыт cutoff: строка появляется сразу в `locked` с снимком позиций |
+| `exported` | хотя бы раз скачали CSV/XLSX (ставит роутер экспорта на этапе 3) |
+| `placed` | закупки подтвердили размещение на Mealty (`POST …/place`, этап 3) |
+
+Идемпотентность cutoff: если на дату уже есть `office_order` в любом статусе (`locked` / `exported` / `placed`) — повторный вызов возвращает 200 без изменений (`already_closed=true`, без нового sync).
 
 ### `office_order_items`
 
@@ -173,9 +177,12 @@ collecting → locked → exported → placed
 
 ## Правило цены
 
-1. Пока план `draft`, UI показывает `dishes.price_kopecks` (последний sync). При добавлении в план копируем её в `planned_price_kopecks`.
-2. После cutoff (job или `POST /api/orders/{date}/cutoff`): для каждой позиции, если блюдо `available` — `actual_price_kopecks = dishes.price_kopecks`; иначе `unavailable = true`, в агрегат не входит.
-3. Дельта для статистики: `actual_price_kopecks * qty − planned_price_kopecks * qty` (unavailable можно считать отдельно: «не закуплено»).
+Как в коде (`replace_plan` + `apply_actual_prices`):
+
+1. Пока план `draft`, UI ориентируется на `dishes.price_kopecks` (последний sync). Успешный `PUT /plans` копирует текущую `dishes.price_kopecks` в `planned_price_kopecks` позиции.
+2. Cutoff вызывает `apply_actual_prices` для планов в `draft` или `locked`: если блюдо `available` — `actual_price_kopecks = dishes.price_kopecks`, `unavailable=false`; иначе `actual_price_kopecks=null`, `unavailable=true`. Затем план → `priced`.
+3. В снимок `office_order_items` и суммы закупок входят только позиции с `unavailable=false` (и непустым `actual_price_kopecks`).
+4. Дельта для статистики: `actual_price_kopecks * qty − planned_price_kopecks * qty` (unavailable считают отдельно: «не закуплено»).
 
 ## Индексы
 
