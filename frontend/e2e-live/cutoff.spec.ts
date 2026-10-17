@@ -123,7 +123,38 @@ test('real cutoff preserves saved plan, locks an unsaved UI and rejects PUT', as
     expect(afterResponse.status()).toBe(200);
     const after: Plan = await afterResponse.json();
     expect(after.editable).toBe(false);
-    expect(after.items).toEqual(before.items);
+    // The cutoff job may already have stamped actual prices and availability.
+    // Only the employee's saved composition and planned prices must stay fixed.
+    const savedComposition = (plan: Plan) =>
+      plan.items
+        .map(({ dish_id, qty, planned_price_kopecks }) => ({
+          dish_id,
+          qty,
+          planned_price_kopecks,
+        }))
+        .sort((a, b) => a.dish_id - b.dish_id);
+    expect(savedComposition(after)).toEqual(savedComposition(before));
+    if (after.status === 'draft') {
+      expect(after.actual_total_kopecks).toBeNull();
+    } else {
+      for (const item of after.items) {
+        if (item.unavailable) expect(item.actual_price_kopecks).toBeNull();
+        else {
+          expect(Number.isInteger(item.actual_price_kopecks)).toBe(true);
+          expect(item.actual_price_kopecks).toBeGreaterThanOrEqual(0);
+        }
+      }
+      expect(after.actual_total_kopecks).toBe(
+        after.items.reduce(
+          (sum, item) =>
+            sum +
+            (item.unavailable
+              ? 0
+              : (item.actual_price_kopecks ?? 0) * item.qty),
+          0,
+        ),
+      );
+    }
     await page.screenshot({
       path: testInfo.outputPath('after-cutoff.png'),
       fullPage: true,
@@ -143,6 +174,8 @@ test('real cutoff preserves saved plan, locks an unsaved UI and rejects PUT', as
           http: rejected.status(),
           editable: after.editable,
           qty: after.items[0].qty,
+          status: after.status,
+          actual_total_kopecks: after.actual_total_kopecks,
         },
         unsavedQty: 2,
         uiLocked: true,

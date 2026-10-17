@@ -1,0 +1,166 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\alexs\\Downloads\\corplunch-main\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config=playwright.admin-live.config.ts"
+    ],
+    "configFile": "C:\\Users\\alexs\\Downloads\\corplunch-main\\frontend\\playwright.admin-live.config.ts",
+    "rootDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/e2e-live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/test-results/live-admin",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop-live",
+        "name": "desktop-live",
+        "testDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/e2e-live",
+        "testIgnore": [],
+        "testMatch": [
+          "admin.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../tests/results/admin-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "admin.spec.ts",
+      "file": "admin.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "live settings persist full PUT and quota boundaries after reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4014,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:53.339Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "settings-observations",
+                      "contentType": "application/json",
+                      "body": "eyJmdWxsUHV0Ijp0cnVlLCJwZXJzaXN0ZWRBZnRlclJlbG9hZCI6dHJ1ZSwicXVvdGFaZXJvIjp0cnVlLCJxdW90YUh1bmRyZWQiOnRydWUsImVtcHR5TGltaXQiOm51bGwsInF1b3RhQWJvdmVIdW5kcmVkUmVqZWN0ZWQiOnRydWV9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d4043a9dd1ab94463227-73ec57d2f91b4eefcefa",
+          "file": "admin.spec.ts",
+          "line": 3,
+          "column": 1
+        },
+        {
+          "title": "live admin returns active status and preserves disabled users during edits",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4083,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:57.944Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "observations",
+                      "contentType": "application/json",
+                      "body": "eyJjcmVhdGVkU3RhdHVzIjoyMDEsInN0YXR1c0ZpZWxkUmV0dXJuZWQiOnRydWUsImRpc2FibGVkTG9naW4iOjQwMSwibmFtZUVkaXRLZXB0RGlzYWJsZWQiOnRydWUsImVuYWJsZWRMb2dpbiI6MjAwLCJyb2xlIjoicHJvY3VyZW1lbnQiLCJsaW1pdEtvcGVja3MiOjB9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d4043a9dd1ab94463227-bb4aa89a930a959bbbcc",
+          "file": "admin.spec.ts",
+          "line": 104,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-17T15:12:51.799Z",
+    "duration": 10717.263,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

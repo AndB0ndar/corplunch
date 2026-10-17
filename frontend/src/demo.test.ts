@@ -14,14 +14,24 @@ describe('Offline regression scenario', () => {
     await login('employee2');
     await api.savePlan(date, [{ dish_id: 1, qty: 1 }]);
     await login('procurement');
-    await api.cutoff(date);
+    expect(await api.cutoff(date)).toMatchObject({
+      already_closed: false,
+      sync: 'ok',
+      plans_closed: 2,
+      items_unavailable: 1,
+    });
     const order = await api.order(date);
     expect(order.items).toHaveLength(1);
     expect(order.items[0].qty).toBe(3);
     expect(order.totals.actual_kopecks).toBe(127500);
     expect(order.by_employee).toHaveLength(2);
     expect(order.totals.unavailable_count).toBe(1);
-    await api.cutoff(date);
+    expect(await api.cutoff(date)).toMatchObject({
+      already_closed: true,
+      sync: 'skipped',
+      plans_closed: 0,
+      items_unavailable: 0,
+    });
     expect(await api.order(date)).toEqual(order);
     await api.place(date);
     await api.place(date);

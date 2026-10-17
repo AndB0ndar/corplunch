@@ -1,16 +1,18 @@
 """HTTP contract tests for POST /api/orders/{date}/cutoff (no network)."""
 
 from datetime import date, timedelta
+from pathlib import Path
 from unittest.mock import patch
 
 import bcrypt
+import pytest
 from httpx import AsyncClient
 from sqlalchemy import func, select
 
 from app.catalog.models import Dish
 from app.db import SessionLocal
-from app.orders.models import OfficeOrder
-from app.providers import MealtyError, NormalizedDish
+from app.orders.models import OfficeOrder, OfficeOrderItem
+from app.providers import MealtyError, NormalizedDish, parse_html
 from app.users.models import User, UserRole
 
 FAR_FUTURE = date.today() + timedelta(days=30)
@@ -31,8 +33,10 @@ def _auth(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-async def _token(client: AsyncClient, role: UserRole) -> tuple[str, int]:
-    email = f"{role.value}@cutoff.test"
+async def _token(
+    client: AsyncClient, role: UserRole, *, email: str | None = None
+) -> tuple[str, int]:
+    email = email or f"{role.value}@cutoff.test"
     password_hash = bcrypt.hashpw(b"secret", bcrypt.gensalt()).decode("utf-8")
     async with SessionLocal() as session:
         user = User(
@@ -107,6 +111,98 @@ async def test_cutoff_requires_token(client: AsyncClient) -> None:
     response = await client.post(_path(FAR_FUTURE))
     assert response.status_code == 401
     assert await _office_order_count() == 0
+
+
+@pytest.mark.parametrize("role", [UserRole.PROCUREMENT, UserRole.ADMIN])
+async def test_cutoff_http_fixture_prices_and_excludes_removed_dish(
+    client: AsyncClient, role: UserRole
+) -> None:
+    parsed = parse_html(
+        (Path(__file__).parent / "fixtures" / "mealty_catalog.html").read_text(
+            encoding="utf-8"
+        )
+    )
+    kept = await _add_dish(parsed[0].external_id, price_kopecks=41000)
+    dropped = await _add_dish(parsed[1].external_id, price_kopecks=30000)
+    employee = await _employee_plan(
+        client,
+        FAR_FUTURE,
+        [{"dish_id": kept, "qty": 2}, {"dish_id": dropped, "qty": 1}],
+    )
+
+    class ChangedFixtureProvider:
+        source = "mealty"
+
+        async def fetch_catalog(self) -> list[NormalizedDish]:
+            return [parsed[0].model_copy(update={"price_kopecks": 42500})]
+
+    token, _ = await _token(client, role)
+    with patch("app.catalog.service.MealtyProvider", ChangedFixtureProvider):
+        closed = await client.post(_path(FAR_FUTURE), headers=_auth(token))
+        assert closed.status_code == 200
+        assert closed.json()["sync"] == "ok"
+        assert closed.json()["items_unavailable"] == 1
+        assert closed.json()["plans_closed"] == 1
+        repeated = await client.post(_path(FAR_FUTURE), headers=_auth(token))
+        assert repeated.status_code == 200
+        assert repeated.json()["already_closed"] is True
+        assert repeated.json()["plans_closed"] == 0
+    plan = (
+        await client.get(
+            f"/api/plans/{FAR_FUTURE.isoformat()}", headers=_auth(employee)
+        )
+    ).json()
+    assert plan["status"] == "included_in_order"
+    assert plan["editable"] is False
+    assert plan["planned_total_kopecks"] == 112000
+    assert plan["actual_total_kopecks"] == 85000
+    items = {item["dish_id"]: item for item in plan["items"]}
+    assert items[kept]["planned_price_kopecks"] == 41000
+    assert items[kept]["actual_price_kopecks"] == 42500
+    assert items[dropped]["unavailable"] is True
+    assert items[dropped]["actual_price_kopecks"] is None
+    async with SessionLocal() as session:
+        rows = list((await session.scalars(select(OfficeOrderItem))).all())
+        assert [
+            (row.dish_id, row.qty, row.unit_price_kopecks, row.line_total_kopecks)
+            for row in rows
+        ] == [(kept, 2, 42500, 85000)]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason=(
+        "QA-CUTOFF-01: new employee can create a plan after manual cutoff; "
+        "see docs/artefacts/tests/qa-cutoff.md"
+    ),
+)
+async def test_new_employee_cannot_create_plan_after_manual_cutoff(
+    client: AsyncClient,
+) -> None:
+    dish = await _add_dish("late-plan", price_kopecks=41000)
+    await _employee_plan(client, FAR_FUTURE, [{"dish_id": dish, "qty": 1}])
+    token, _ = await _token(client, UserRole.PROCUREMENT)
+    with patch("app.catalog.service.MealtyProvider", _FailingProvider):
+        closed = await client.post(_path(FAR_FUTURE), headers=_auth(token))
+    assert closed.status_code == 200
+    employee, _ = await _token(client, UserRole.EMPLOYEE, email="late@cutoff.test")
+    path = f"/api/plans/{FAR_FUTURE.isoformat()}"
+    listed = await client.get(path, headers=_auth(employee))
+    assert listed.status_code == 200
+    saved = await client.put(
+        path, headers=_auth(employee), json={"items": [{"dish_id": dish, "qty": 1}]}
+    )
+    observed = {
+        "cutoff_http": closed.status_code,
+        "new_employee_editable": listed.json()["editable"],
+        "save_http": saved.status_code,
+    }
+    assert observed == {
+        "cutoff_http": 200,
+        "new_employee_editable": False,
+        "save_http": 403,
+    }
 
 
 async def test_cutoff_forbidden_for_employee(client: AsyncClient) -> None:

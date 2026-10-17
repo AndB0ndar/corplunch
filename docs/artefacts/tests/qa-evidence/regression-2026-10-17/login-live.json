@@ -1,0 +1,484 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\alexs\\Downloads\\corplunch-main\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config=playwright.live.config.ts"
+    ],
+    "configFile": "C:\\Users\\alexs\\Downloads\\corplunch-main\\frontend\\playwright.live.config.ts",
+    "rootDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/e2e-live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/test-results/live-login",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop-live",
+        "name": "desktop-live",
+        "testDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/e2e-live",
+        "testIgnore": [],
+        "testMatch": [
+          "login.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../tests/results/login-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "login.spec.ts",
+      "file": "login.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "employee: wrong password, real login, role, reload, logout",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5141,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:25.806Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "observations",
+                      "contentType": "application/json",
+                      "body": "eyJhY2NvdW50IjoiZW1wbG95ZWUiLCJyb2xlIjoiZW1wbG95ZWUiLCJ1c2VySWQiOjEsImxvZ2luU3RhdHVzIjoyMDAsInByb2ZpbGVTdGF0dXMiOjIwMCwiZmFpbGVkUmVxdWVzdHMiOlt7InBhdGgiOiIvYXBpL2F1dGgvbG9naW4iLCJzdGF0dXMiOjQwMX1dfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-a0075c8d0b0a96a6838d",
+          "file": "login.spec.ts",
+          "line": 13,
+          "column": 3
+        },
+        {
+          "title": "employee2: wrong password, real login, role, reload, logout",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8079,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:31.653Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "observations",
+                      "contentType": "application/json",
+                      "body": "eyJhY2NvdW50IjoiZW1wbG95ZWUyIiwicm9sZSI6ImVtcGxveWVlIiwidXNlcklkIjoyLCJsb2dpblN0YXR1cyI6MjAwLCJwcm9maWxlU3RhdHVzIjoyMDAsImZhaWxlZFJlcXVlc3RzIjpbeyJwYXRoIjoiL2FwaS9hdXRoL2xvZ2luIiwic3RhdHVzIjo0MDF9XX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-95cc8c5f3aea65b7442a",
+          "file": "login.spec.ts",
+          "line": 13,
+          "column": 3
+        },
+        {
+          "title": "procurement: wrong password, real login, role, reload, logout",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2593,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:39.752Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "observations",
+                      "contentType": "application/json",
+                      "body": "eyJhY2NvdW50IjoicHJvY3VyZW1lbnQiLCJyb2xlIjoicHJvY3VyZW1lbnQiLCJ1c2VySWQiOjMsImxvZ2luU3RhdHVzIjoyMDAsInByb2ZpbGVTdGF0dXMiOjIwMCwiZmFpbGVkUmVxdWVzdHMiOlt7InBhdGgiOiIvYXBpL2F1dGgvbG9naW4iLCJzdGF0dXMiOjQwMX1dfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-ff0094014f5b4c788b13",
+          "file": "login.spec.ts",
+          "line": 13,
+          "column": 3
+        },
+        {
+          "title": "admin: wrong password, real login, role, reload, logout",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2182,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:42.362Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "observations",
+                      "contentType": "application/json",
+                      "body": "eyJhY2NvdW50IjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4iLCJ1c2VySWQiOjQsImxvZ2luU3RhdHVzIjoyMDAsInByb2ZpbGVTdGF0dXMiOjIwMCwiZmFpbGVkUmVxdWVzdHMiOlt7InBhdGgiOiIvYXBpL2F1dGgvbG9naW4iLCJzdGF0dXMiOjQwMX1dfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-193e835a9ea59c941dc0",
+          "file": "login.spec.ts",
+          "line": 13,
+          "column": 3
+        },
+        {
+          "title": "no token: GET /api/me returns 401",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 47,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:44.560Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-6e1b28f14fbaaec49029",
+          "file": "login.spec.ts",
+          "line": 117,
+          "column": 3
+        },
+        {
+          "title": "no token: GET /api/catalog returns 401",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 29,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:44.622Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-ea67ffa9de6405ba89cf",
+          "file": "login.spec.ts",
+          "line": 117,
+          "column": 3
+        },
+        {
+          "title": "no token: POST /api/catalog/sync returns 401",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 48,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:44.666Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-b1af590449f7514e6b9e",
+          "file": "login.spec.ts",
+          "line": 117,
+          "column": 3
+        },
+        {
+          "title": "no token: GET /api/admin/users returns 401",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 25,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:44.739Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-2bff7e279e47bff1e2e3",
+          "file": "login.spec.ts",
+          "line": 117,
+          "column": 3
+        },
+        {
+          "title": "no token: GET /api/admin/departments returns 401",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:44.777Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-84ddad5d3ba021af75df",
+          "file": "login.spec.ts",
+          "line": 117,
+          "column": 3
+        },
+        {
+          "title": "real tokens identify two distinct employees and enforce admin rights",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1485,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:44.813Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-84716dea991bd65d6bd4",
+          "file": "login.spec.ts",
+          "line": 125,
+          "column": 1
+        },
+        {
+          "title": "invalid token is rejected",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:12:46.308Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41d3fd2474a19feb00a1-2dbe4816d8a0e1821e7c",
+          "file": "login.spec.ts",
+          "line": 154,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-17T15:12:24.757Z",
+    "duration": 22014.571,
+    "expected": 11,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

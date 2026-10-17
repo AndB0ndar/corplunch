@@ -22,6 +22,7 @@ export function Orders() {
   const [date, setDate] = useState(shiftDate(today(), 2));
   const [confirm, setConfirm] = useState<'cutoff' | 'place' | null>(null);
   const [message, setMessage] = useState('');
+  const [cutoffWarning, setCutoffWarning] = useState(false);
   const query = useQuery({
     queryKey: ['order', date],
     queryFn: () => api.order(date),
@@ -29,12 +30,20 @@ export function Orders() {
   const action = useAction(
     async (kind: 'sync' | 'cutoff' | 'place' | 'csv' | 'xlsx') => {
       setMessage('');
+      setCutoffWarning(false);
       if (kind === 'sync') {
         await api.sync();
         setMessage('Каталог обновлён.');
       } else if (kind === 'cutoff') {
-        await api.cutoff(date);
-        setMessage('Приём закрыт. Цены и наличие уточнены.');
+        const result = await api.cutoff(date);
+        setCutoffWarning(!result.already_closed && result.sync === 'skipped');
+        setMessage(
+          result.already_closed
+            ? 'Приём уже закрыт. Состав заказа и зафиксированные цены не изменились.'
+            : result.sync === 'skipped'
+              ? 'Приём закрыт. Обновить меню Mealty не удалось — использованы последние сохранённые цены и наличие.'
+              : 'Приём закрыт. Цены и наличие уточнены.',
+        );
       } else if (kind === 'place') {
         await api.place(date);
         setMessage('Заказ отмечен как размещённый.');
@@ -69,11 +78,15 @@ export function Orders() {
             setConfirm(null);
             action.reset();
             setMessage('');
+            setCutoffWarning(false);
           }}
         />
       </div>
       <ErrorNotice error={query.error ?? action.error} />
-      <div role="status" className="success-message">
+      <div
+        role="status"
+        className={cutoffWarning ? 'notice' : 'success-message'}
+      >
         {message}
       </div>
       {query.isPending ? (
@@ -137,7 +150,7 @@ export function Orders() {
                   </b>
                   <p>
                     {confirm === 'cutoff'
-                      ? 'Планы сотрудников станут недоступны для редактирования. Будут уточнены цены и наличие.'
+                      ? 'Планы сотрудников станут недоступны для редактирования. Попробуем обновить цены и наличие; если Mealty недоступен, используем последние сохранённые данные.'
                       : 'Эта отметка сохраняет факт ручного размещения. Она не отправляет заказ поставщику.'}
                   </p>
                 </div>

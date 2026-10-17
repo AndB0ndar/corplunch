@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="9" time="18.469" timestamp="2026-10-16T15:45:50.490506+00:00" hostname="6ed7bc31291d"><testcase classname="tests.test_orders_cutoff" name="test_cutoff_requires_token" time="0.514" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_http_fixture_prices_and_excludes_removed_dish[procurement]" time="3.055" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_http_fixture_prices_and_excludes_removed_dish[admin]" time="1.826" /><testcase classname="tests.test_orders_cutoff" name="test_new_employee_cannot_create_plan_after_manual_cutoff" time="4.265"><failure message="AssertionError: assert {'cutoff_http...ve_http': 200} == {'cutoff_http...ve_http': 403}&#10;  &#10;  Omitting 1 identical items, use -vv to show&#10;  Differing items:&#10;  {'new_employee_editable': True} != {'new_employee_editable': False}&#10;  {'save_http': 200} != {'save_http': 403}&#10;  Use -v to get more diff">client = &lt;httpx.AsyncClient object at 0x70e367feb0e0&gt;
+
+    async def test_new_employee_cannot_create_plan_after_manual_cutoff(client: AsyncClient) -&gt; None:
+        dish = await _add_dish("late-plan", price_kopecks=41000)
+        await _employee_plan(client, FAR_FUTURE, [{"dish_id": dish, "qty": 1}])
+        token, _ = await _token(client, UserRole.PROCUREMENT)
+        with patch("app.catalog.service.MealtyProvider", _FailingProvider):
+            closed = await client.post(_path(FAR_FUTURE), headers=_auth(token))
+        assert closed.status_code == 200
+        employee, _ = await _token(client, UserRole.EMPLOYEE, email="late@cutoff.test")
+        path = f"/api/plans/{FAR_FUTURE.isoformat()}"
+        listed = await client.get(path, headers=_auth(employee))
+        assert listed.status_code == 200
+        saved = await client.put(path, headers=_auth(employee), json={"items": [{"dish_id": dish, "qty": 1}]})
+        observed = {"cutoff_http": closed.status_code, "new_employee_editable": listed.json()["editable"], "save_http": saved.status_code}
+&gt;       assert observed == {"cutoff_http": 200, "new_employee_editable": False, "save_http": 403}
+E       AssertionError: assert {'cutoff_http...ve_http': 200} == {'cutoff_http...ve_http': 403}
+E
+E         Omitting 1 identical items, use -vv to show
+E         Differing items:
+E         {'new_employee_editable': True} != {'new_employee_editable': False}
+E         {'save_http': 200} != {'save_http': 403}
+E         Use -v to get more diff
+
+tests/test_orders_cutoff.py:166: AssertionError</failure></testcase><testcase classname="tests.test_orders_cutoff" name="test_cutoff_forbidden_for_employee" time="2.297" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_invalid_date_is_422" time="2.103" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_empty_day_is_400" time="0.927" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_closes_early_and_blocks_plan_edits" time="1.565" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_idempotent_second_call" time="1.516" /></testsuite></testsuites>

@@ -281,7 +281,15 @@ export const demoApi: AppApi = {
   },
   async cutoff(date) {
     authorize();
-    if (state.orders[date]) return;
+    if (state.orders[date])
+      return {
+        delivery_date: date,
+        status: state.orders[date].status,
+        already_closed: true,
+        sync: 'skipped',
+        plans_closed: 0,
+        items_unavailable: 0,
+      };
     const plans = plansOn(date);
     if (!plans.some((p) => p.items.length))
       fail(400, 'На эту дату пока нет заказов.');
@@ -303,6 +311,18 @@ export const demoApi: AppApi = {
     }
     state.orders[date] = { ...summarize(date, plans), status: 'locked' };
     persist();
+    return {
+      delivery_date: date,
+      status: 'locked',
+      already_closed: false,
+      sync: 'ok',
+      plans_closed: plans.length,
+      items_unavailable: plans.reduce(
+        (count, plan) =>
+          count + plan.items.filter((item) => item.unavailable).length,
+        0,
+      ),
+    };
   },
   async place(date) {
     authorize();

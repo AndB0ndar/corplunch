@@ -1,0 +1,126 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\alexs\\Downloads\\corplunch-main\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config=playwright.cutoff-live.config.ts"
+    ],
+    "configFile": "C:\\Users\\alexs\\Downloads\\corplunch-main\\frontend\\playwright.cutoff-live.config.ts",
+    "rootDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/e2e-live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/test-results/live-cutoff",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop-live",
+        "name": "desktop-live",
+        "testDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/e2e-live",
+        "testIgnore": [],
+        "testMatch": [
+          "cutoff.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../tests/results/cutoff-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "cutoff.spec.ts",
+      "file": "cutoff.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "real cutoff preserves saved plan, locks an unsaved UI and rejects PUT",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 150000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 50316,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-17T15:13:18.242Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "cutoff-observations",
+                      "contentType": "application/json",
+                      "body": "eyJkZWxpdmVyeURhdGUiOiIyMDI2LTEwLTE4IiwiY3V0b2ZmX3RpbWUiOiIxODoxNCIsInRpbWV6b25lIjoiRXVyb3BlL01vc2NvdyIsImJlZm9yZSI6eyJodHRwIjoyMDAsImVkaXRhYmxlIjp0cnVlLCJxdHkiOjF9LCJhZnRlciI6eyJodHRwIjo0MDMsImVkaXRhYmxlIjpmYWxzZSwicXR5IjoxLCJzdGF0dXMiOiJkcmFmdCIsImFjdHVhbF90b3RhbF9rb3BlY2tzIjpudWxsfSwidW5zYXZlZFF0eSI6MiwidWlMb2NrZWQiOnRydWV9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7980c4b8cc74b8a02d58-7e38447ac000dd227a4d",
+          "file": "cutoff.spec.ts",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-17T15:13:17.578Z",
+    "duration": 55357.689999999995,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,744 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="3" skipped="1" tests="124" time="120.177" timestamp="2026-10-16T15:47:08.724373+00:00" hostname="6ed7bc31291d"><testcase classname="tests.test_alembic" name="test_alembic_creates_required_tables" time="1.849" /><testcase classname="tests.test_alembic" name="test_alembic_0006_downgrade_drops_office_tables" time="8.428" /><testcase classname="tests.test_auth" name="test_login_success" time="0.864" /><testcase classname="tests.test_auth" name="test_login_wrong_password" time="0.806" /><testcase classname="tests.test_auth" name="test_me_requires_token" time="0.231" /><testcase classname="tests.test_auth" name="test_me_returns_current_user" time="0.810" /><testcase classname="tests.test_catalog_http" name="test_catalog_requires_token" time="0.240" /><testcase classname="tests.test_catalog_http" name="test_employee_reads_catalog" time="1.072" /><testcase classname="tests.test_catalog_http" name="test_empty_catalog_returns_empty_list" time="0.999" /><testcase classname="tests.test_catalog_http" name="test_default_hides_unavailable" time="1.170" /><testcase classname="tests.test_catalog_http" name="test_available_only_false_returns_last_card" time="0.953" /><testcase classname="tests.test_catalog_http" name="test_category_and_name_filters" time="0.879" /><testcase classname="tests.test_catalog_http" name="test_procurement_syncs_fixture" time="0.972" /><testcase classname="tests.test_catalog_http" name="test_employee_cannot_sync" time="0.858" /><testcase classname="tests.test_catalog_http" name="test_mealty_error_leaves_rows_unchanged" time="1.076" /><testcase classname="tests.test_catalog_http" name="test_quota_refusal_skips_mealty" time="2.027" /><testcase classname="tests.test_catalog_sync_job" name="test_scheduler_registers_catalog_and_cutoff_jobs" time="0.370" /><testcase classname="tests.test_catalog_sync_job" name="test_job_upserts_patched_snapshot_once" time="0.502" /><testcase classname="tests.test_catalog_sync_job" name="test_quota_refusal_skips_fetch_and_writes_nothing" time="0.434" /><testcase classname="tests.test_catalog_sync_job" name="test_mealty_error_leaves_existing_dishes" time="0.286" /><testcase classname="tests.test_catalog_upsert" name="test_first_snapshot_inserts_cards_with_one_clock" time="0.276" /><testcase classname="tests.test_catalog_upsert" name="test_repeat_snapshot_updates_the_same_row" time="0.337" /><testcase classname="tests.test_catalog_upsert" name="test_unchanged_price_still_records_history" time="0.331" /><testcase classname="tests.test_catalog_upsert" name="test_absent_dish_stays_priced_and_repeat_count_is_stable" time="0.417" /><testcase classname="tests.test_catalog_upsert" name="test_empty_snapshot_writes_nothing" time="0.443" /><testcase classname="tests.test_catalog_upsert" name="test_other_source_is_not_updated_or_counted" time="0.362" /><testcase classname="tests.test_cutoff_job" name="test_tick_closes_overdue_date" time="0.451" /><testcase classname="tests.test_cutoff_job" name="test_tick_skips_date_with_future_deadline" time="0.349" /><testcase classname="tests.test_cutoff_job" name="test_tick_skips_quiet_day" time="0.268" /><testcase classname="tests.test_cutoff_job" name="test_tick_ignores_dates_beyond_lookback" time="0.353" /><testcase classname="tests.test_cutoff_job" name="test_tick_picks_up_cutoff_time_change_without_restart" time="0.515" /><testcase classname="tests.test_cutoff_job" name="test_tick_swallows_per_date_errors" time="0.417"><failure message="AssertionError: assert {} == {datetime.dat...12): 'locked'}&#10;  &#10;  Right contains 1 more item:&#10;  {datetime.date(2026, 10, 12): 'locked'}&#10;  Use -v to get more diff">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7aedded6c8c0&gt;
+
+    async def test_tick_swallows_per_date_errors(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -&gt; None:
+        dish_id = await _add_dish("tick-6")
+        user_id = await _user("tick6@test.local")
+        await _plan(user_id, YESTERDAY, dish_id)
+        await _plan(user_id, TODAY, dish_id)
+
+        real_run_cutoff = cutoff_job.run_cutoff
+
+        async def flaky(session, delivery_date):  # type: ignore[no-untyped-def]
+            if delivery_date == YESTERDAY:
+                raise RuntimeError("boom")
+            return await real_run_cutoff(session, delivery_date)
+
+        monkeypatch.setattr(cutoff_job, "run_cutoff", flaky)
+        with patch("app.catalog.service.MealtyProvider", _FailingProvider):
+            await cutoff_job.run_day_cutoff_tick()
+
+        orders = await _orders_by_date()
+&gt;       assert orders == {TODAY: "locked"}
+E       AssertionError: assert {} == {datetime.dat...12): 'locked'}
+E
+E         Right contains 1 more item:
+E         {datetime.date(2026, 10, 12): 'locked'}
+E         Use -v to get more diff
+
+tests/test_cutoff_job.py:203: AssertionError</failure></testcase><testcase classname="tests.test_departments" name="test_departments_unauthorized" time="0.402" /><testcase classname="tests.test_departments" name="test_create_and_list_departments" time="0.284" /><testcase classname="tests.test_health" name="test_health_ok" time="0.254" /><testcase classname="tests.test_meal_plans" name="test_plans_require_token" time="0.265" /><testcase classname="tests.test_meal_plans" name="test_empty_get_does_not_insert" time="1.002" /><testcase classname="tests.test_meal_plans" name="test_invalid_date_is_422" time="1.041" /><testcase classname="tests.test_meal_plans" name="test_employee_can_pass_own_user_id" time="0.975" /><testcase classname="tests.test_meal_plans" name="test_employee_cannot_read_another_user" time="2.710" /><testcase classname="tests.test_meal_plans" name="test_procurement_and_admin_can_read_a_plan[procurement]" time="4.157" /><testcase classname="tests.test_meal_plans" name="test_procurement_and_admin_can_read_a_plan[admin]" time="2.209" /><testcase classname="tests.test_meal_plans" name="test_procurement_without_user_id_reads_own_plan" time="0.858" /><testcase classname="tests.test_meal_plans" name="test_unknown_user_is_404[procurement]" time="1.319" /><testcase classname="tests.test_meal_plans" name="test_unknown_user_is_404[admin]" time="0.903" /><testcase classname="tests.test_meal_plans" name="test_exact_deadline_is_not_editable" time="1.366" /><testcase classname="tests.test_meal_plans" name="test_before_deadline_is_editable" time="1.246" /><testcase classname="tests.test_meal_plans" name="test_non_draft_plan_is_not_editable[locked]" time="1.019" /><testcase classname="tests.test_meal_plans" name="test_non_draft_plan_is_not_editable[priced]" time="1.706" /><testcase classname="tests.test_meal_plans" name="test_non_draft_plan_is_not_editable[included_in_order]" time="2.617" /><testcase classname="tests.test_meal_plans" name="test_put_creates_replaces_and_clears" time="3.234" /><testcase classname="tests.test_meal_plans" name="test_catalog_price_is_snapshotted_until_next_put" time="1.845" /><testcase classname="tests.test_meal_plans" name="test_non_employee_cannot_put[procurement]" time="1.141" /><testcase classname="tests.test_meal_plans" name="test_non_employee_cannot_put[admin]" time="0.927" /><testcase classname="tests.test_meal_plans" name="test_closed_day_put_is_cutoff" time="0.958" /><testcase classname="tests.test_meal_plans" name="test_qty_below_one_does_not_change_plan" time="1.457" /><testcase classname="tests.test_meal_plans" name="test_duplicate_dish_is_422" time="2.107" /><testcase classname="tests.test_meal_plans" name="test_missing_dish_is_409" time="2.462" /><testcase classname="tests.test_meal_plans" name="test_unavailable_dish_is_409" time="2.772" /><testcase classname="tests.test_meal_plans" name="test_stored_dish_stays_visible_after_it_becomes_unavailable" time="1.697" /><testcase classname="tests.test_meal_plans" name="test_missing_dish_is_reported_before_the_limit" time="0.942" /><testcase classname="tests.test_meal_plans" name="test_missing_dish_wins_over_unavailable" time="1.035" /><testcase classname="tests.test_meal_plans" name="test_over_limit_is_422" time="1.307" /><testcase classname="tests.test_meal_plans" name="test_put_succeeds_when_no_limit_is_configured" time="1.579" /><testcase classname="tests.test_meal_plans" name="test_stamp_sets_actual_price_or_unavailable[price-up]" time="0.849" /><testcase classname="tests.test_meal_plans" name="test_stamp_sets_actual_price_or_unavailable[price-unchanged]" time="0.737" /><testcase classname="tests.test_meal_plans" name="test_stamp_sets_actual_price_or_unavailable[price-down]" time="0.799" /><testcase classname="tests.test_meal_plans" name="test_stamp_sets_actual_price_or_unavailable[unavailable]" time="0.764" /><testcase classname="tests.test_meal_plans" name="test_stamp_prices_empty_draft" time="1.020" /><testcase classname="tests.test_meal_plans" name="test_stamp_prices_locked_plan" time="0.781" /><testcase classname="tests.test_meal_plans" name="test_stamp_leaves_other_delivery_date" time="1.224" /><testcase classname="tests.test_meal_plans" name="test_stamp_does_not_insert_missing_plan" time="1.596" /><testcase classname="tests.test_meal_plans" name="test_second_stamp_keeps_frozen_actual_price" time="1.794" /><testcase classname="tests.test_meal_plans" name="test_stamp_leaves_included_in_order_on_same_date" time="1.516" /><testcase classname="tests.test_meal_plans" name="test_get_after_stamp_sums_buyable_items" time="0.934" /><testcase classname="tests.test_meal_plans" name="test_get_all_unavailable_priced_plan_actual_total_is_zero" time="1.023" /><testcase classname="tests.test_meal_plans" name="test_get_empty_priced_plan_actual_total_is_zero" time="0.870" /><testcase classname="tests.test_meal_plans" name="test_put_after_stamp_is_cutoff_before_deadline" time="0.887" /><testcase classname="tests.test_mealty_parser" name="test_fixture_card_875_fields" time="0.261" /><testcase classname="tests.test_mealty_parser" name="test_hidden_card_skipped" time="0.241" /><testcase classname="tests.test_mealty_parser" name="test_novelty_and_main_dish_collapse_to_one" time="0.249" /><testcase classname="tests.test_mealty_parser" name="test_parse_html_empty_returns_empty_list" time="0.243" /><testcase classname="tests.test_mealty_parser" name="test_provider_source_and_fetch_is_awaitable" time="0.233" /><testcase classname="tests.test_mealty_parser" name="test_fetch_catalog_empty_body_raises" time="0.243" /><testcase classname="tests.test_mealty_parser" name="test_fetch_catalog_uses_moscow_cookie_and_homepage_only" time="0.312" /><testcase classname="tests.test_mealty_parser" name="test_unknown_city_raises_before_http" time="0.334" /><testcase classname="tests.test_mealty_parser" name="test_http_502_after_retry_raises" time="0.353" /><testcase classname="tests.test_openapi" name="test_docs_open" time="0.256" /><testcase classname="tests.test_openapi" name="test_openapi_includes_health_and_departments" time="0.305" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_requires_token" time="0.243" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_http_fixture_prices_and_excludes_removed_dish[procurement]" time="1.530" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_http_fixture_prices_and_excludes_removed_dish[admin]" time="1.523" /><testcase classname="tests.test_orders_cutoff" name="test_new_employee_cannot_create_plan_after_manual_cutoff" time="2.103"><skipped type="pytest.xfail" message="QA-CUTOFF-01: new employee can create a plan after manual cutoff; see docs/artefacts/tests/qa-cutoff.md" /></testcase><testcase classname="tests.test_orders_cutoff" name="test_cutoff_forbidden_for_employee" time="0.840" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_invalid_date_is_422" time="0.802" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_empty_day_is_400" time="0.847" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_closes_early_and_blocks_plan_edits" time="1.719" /><testcase classname="tests.test_orders_cutoff" name="test_cutoff_idempotent_second_call" time="1.494" /><testcase classname="tests.test_orders_service" name="test_cutoff_aggregates_two_employees_and_sync_ok" time="0.455" /><testcase classname="tests.test_orders_service" name="test_cutoff_sync_failure_closes_on_stored_snapshot" time="0.379" /><testcase classname="tests.test_orders_service" name="test_cutoff_excludes_unavailable_items" time="0.312" /><testcase classname="tests.test_orders_service" name="test_cutoff_moves_empty_plans_too" time="0.336" /><testcase classname="tests.test_orders_service" name="test_cutoff_retry_after_crash_between_steps_converges" time="0.364" /><testcase classname="tests.test_orders_service" name="test_cutoff_picks_up_included_plans_without_double_count" time="0.364" /><testcase classname="tests.test_orders_service" name="test_cutoff_second_call_is_idempotent_noop" time="0.323" /><testcase classname="tests.test_orders_service" name="test_cutoff_snapshot_immune_to_later_sync" time="0.338" /><testcase classname="tests.test_orders_service" name="test_cutoff_nothing_to_close_without_items" time="0.279" /><testcase classname="tests.test_orders_service" name="test_cutoff_records_quota_run_but_never_blocks" time="0.320" /><testcase classname="tests.test_orders_service" name="test_concurrent_cutoffs_create_exactly_one_order" time="0.281"><failure message="sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.UniqueViolationError) duplicate key value violates unique constraint &quot;settings_pkey&quot;&#10;[SQL: INSERT INTO settings (id, cutoff_time, timezone, mealty_city, daily_limit_kopecks, catalog_sync_per_day) VALUES ($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::INTEGER, $6::INTEGER)]&#10;[parameters: (1, '16:00', 'Europe/Moscow', 'Москва', None, 2)]&#10;(Background on this error at: https://sqlalche.me/e/21/gkpj)">self = &lt;sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x7aeddec6bb50&gt;
+operation = 'INSERT INTO settings (id, cutoff_time, timezone, mealty_city, daily_limit_kopecks, catalog_sync_per_day) VALUES ($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::INTEGER, $6::INTEGER)'
+parameters = (1, '16:00', 'Europe/Moscow', 'Москва', None, 2)
+
+    async def _prepare_and_execute(self, operation, parameters):
+        adapt_connection = self._adapt_connection
+
+        async with adapt_connection._execute_mutex:
+            if adapt_connection._transaction is None:
+                await adapt_connection._start_transaction()
+
+            if parameters is None:
+                parameters = ()
+
+            try:
+                prepared_stmt, attributes = await adapt_connection._prepare(
+                    operation, self._invalidate_schema_cache_asof
+                )
+
+                if attributes:
+                    self._description = [
+                        (
+                            attr.name,
+                            attr.type.oid,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                        for attr in attributes
+                    ]
+                else:
+                    self._description = None
+
+                if self.server_side:
+                    self._cursor = await prepared_stmt.cursor(*parameters)
+                    self._rowcount = -1
+                else:
+&gt;                   self._rows = deque(await prepared_stmt.fetch(*parameters))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:605:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/local/lib/python3.12/site-packages/asyncpg/prepared_stmt.py:177: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/asyncpg/prepared_stmt.py:268: in __bind_execute
+    data, status, _ = await self.__do_execute(
+/usr/local/lib/python3.12/site-packages/asyncpg/prepared_stmt.py:257: in __do_execute
+    return await executor(protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+&gt;   ???
+E   asyncpg.exceptions.UniqueViolationError: duplicate key value violates unique constraint "settings_pkey"
+E   DETAIL:  Key (id)=(1) already exists.
+
+asyncpg/protocol/protocol.pyx:197: UniqueViolationError
+
+The above exception was the direct cause of the following exception:
+
+self = &lt;sqlalchemy.engine.base.Connection object at 0x7aedde733d70&gt;
+dialect = &lt;sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x7aeddfefe9c0&gt;
+context = &lt;sqlalchemy.dialects.postgresql.asyncpg.PGExecutionContext_asyncpg object at 0x7aedde7326c0&gt;
+statement = &lt;sqlalchemy.dialects.postgresql.asyncpg.PGCompiler_asyncpg object at 0x7aeddebf4da0&gt;
+parameters = [(1, '16:00', 'Europe/Moscow', 'Москва', None, 2)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -&gt; CursorResult[Unpack[TupleAny]]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+
+        effective_parameters: Optional[_AnyExecuteParams]
+
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+
+        evt_handled: bool = False
+        try:
+            if self._has_events or self.engine._has_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    str_statement, effective_parameters = fn(
+                        self,
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                        context.executemany,
+                    )
+
+            if self._echo:
+                self._log_info(str_statement)
+
+                stats = context._get_cache_stats()
+
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            effective_parameters,
+                            batches=10,
+                            ismulti=context.executemany,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+&gt;                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1946:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: in do_execute
+    cursor.execute(statement, parameters)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:656: in execute
+    await_(self._prepare_and_execute(operation, parameters))
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:167: in await_
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:205: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:618: in _prepare_and_execute
+    self._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:568: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:847: in _handle_exception
+    super()._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py:412: in _handle_exception
+    self._handle_exception_no_connection(self.dbapi, error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = &lt;class 'sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_connection'&gt;
+dbapi = &lt;sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi object at 0x7aede01779b0&gt;
+error = UniqueViolationError('duplicate key value violates unique constraint "settings_pkey"')
+
+    @classmethod
+    def _handle_exception_no_connection(
+        cls, dbapi: Any, error: Exception
+    ) -&gt; NoReturn:
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = dbapi._asyncpg_error_translate
+
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    message = error.args[0]
+                    translated_error = exception_mapping[super_](
+                        message, error
+                    )
+&gt;                   raise translated_error from error
+E                   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.UniqueViolationError: duplicate key value violates unique constraint "settings_pkey"
+
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:840: UniqueViolationError
+
+The above exception was the direct cause of the following exception:
+
+    async def test_concurrent_cutoffs_create_exactly_one_order() -&gt; None:
+        dishes = await _seed_fixture_catalog()
+        dish = next(iter(dishes.values()))
+        u = await _user("race@test.local")
+        await _plan(u, DELIVERY, [(dish.id, 2, dish.price_kopecks)])
+
+        async def _one() -&gt; object:
+            async with SessionLocal() as session:
+                return await run_cutoff(session, DELIVERY)
+
+        with patch("app.catalog.service.MealtyProvider", _FailingProvider):
+&gt;           first, second = await asyncio.gather(_one(), _one())
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_orders_service.py:413:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/test_orders_service.py:410: in _one
+    return await run_cutoff(session, DELIVERY)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/orders/service.py:124: in run_cutoff
+    sync_state = await _sync_catalog_best_effort(session)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/orders/service.py:88: in _sync_catalog_best_effort
+    await sync_live_catalog(session, enforce_quota=False)
+app/catalog/service.py:71: in sync_live_catalog
+    await record_catalog_sync_run(session)
+app/users/quota.py:33: in record_catalog_sync_run
+    settings = await get_or_create_settings(session)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/users/settings_service.py:33: in get_or_create_settings
+    await session.flush()
+/usr/local/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/session.py:1030: in flush
+    await greenlet_spawn(self.sync_session.flush, objects=objects)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:212: in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4536: in flush
+    self._flush(objects)
+&lt;sqlalchemy generated warned() wrapper for sqlalchemy.orm.session.Session._flush&gt;:2: in _flush
+    return target(fn, self, objects=objects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4679: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4640: in _flush
+    flush_context.execute()
+/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:467: in execute
+    rec.execute(self)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:643: in execute
+    util.preloaded.orm_persistence._save_obj(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:92: in _save_obj
+    _emit_insert_statements(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:1052: in _emit_insert_statements
+    result = connection.execute(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1451: in execute
+    return meth(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+    return connection._execute_clauseelement(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1671: in _execute_clauseelement
+    ret = self._execute_context(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1825: in _execute_context
+    return self._exec_single_context(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1965: in _exec_single_context
+    self._handle_dbapi_exception(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2335: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1946: in _exec_single_context
+    self.dialect.do_execute(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: in do_execute
+    cursor.execute(statement, parameters)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:656: in execute
+    await_(self._prepare_and_execute(operation, parameters))
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:167: in await_
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:205: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:618: in _prepare_and_execute
+    self._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:568: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:847: in _handle_exception
+    super()._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py:412: in _handle_exception
+    self._handle_exception_no_connection(self.dbapi, error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = &lt;class 'sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_connection'&gt;
+dbapi = &lt;sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi object at 0x7aede01779b0&gt;
+error = UniqueViolationError('duplicate key value violates unique constraint "settings_pkey"')
+
+    @classmethod
+    def _handle_exception_no_connection(
+        cls, dbapi: Any, error: Exception
+    ) -&gt; NoReturn:
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = dbapi._asyncpg_error_translate
+
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    message = error.args[0]
+                    translated_error = exception_mapping[super_](
+                        message, error
+                    )
+&gt;                   raise translated_error from error
+E                   sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.UniqueViolationError) duplicate key value violates unique constraint "settings_pkey"
+E                   [SQL: INSERT INTO settings (id, cutoff_time, timezone, mealty_city, daily_limit_kopecks, catalog_sync_per_day) VALUES ($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::INTEGER, $6::INTEGER)]
+E                   [parameters: (1, '16:00', 'Europe/Moscow', 'Москва', None, 2)]
+E                   (Background on this error at: https://sqlalche.me/e/21/gkpj)
+
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:840: IntegrityError</failure></testcase><testcase classname="tests.test_orders_service" name="test_concurrent_cutoffs_create_exactly_one_order" time="1.019"><error message="failed on teardown with &quot;sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) deadlock detected&#10;[SQL: &#10;DROP TABLE meal_plans]&#10;(Background on this error at: https://sqlalche.me/e/21/dbapi)&quot;">self = &lt;sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x7aedde71d310&gt;
+operation = '\nDROP TABLE meal_plans', parameters = ()
+
+    async def _prepare_and_execute(self, operation, parameters):
+        adapt_connection = self._adapt_connection
+
+        async with adapt_connection._execute_mutex:
+            if adapt_connection._transaction is None:
+                await adapt_connection._start_transaction()
+
+            if parameters is None:
+                parameters = ()
+
+            try:
+                prepared_stmt, attributes = await adapt_connection._prepare(
+                    operation, self._invalidate_schema_cache_asof
+                )
+
+                if attributes:
+                    self._description = [
+                        (
+                            attr.name,
+                            attr.type.oid,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                        for attr in attributes
+                    ]
+                else:
+                    self._description = None
+
+                if self.server_side:
+                    self._cursor = await prepared_stmt.cursor(*parameters)
+                    self._rowcount = -1
+                else:
+&gt;                   self._rows = deque(await prepared_stmt.fetch(*parameters))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:605:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/local/lib/python3.12/site-packages/asyncpg/prepared_stmt.py:177: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/asyncpg/prepared_stmt.py:268: in __bind_execute
+    data, status, _ = await self.__do_execute(
+/usr/local/lib/python3.12/site-packages/asyncpg/prepared_stmt.py:257: in __do_execute
+    return await executor(protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+&gt;   ???
+E   asyncpg.exceptions.DeadlockDetectedError: deadlock detected
+E   DETAIL:  Process 797 waits for AccessExclusiveLock on relation 54459 of database 16385; blocked by process 796.
+E   Process 796 waits for AccessShareLock on relation 54493 of database 16385; blocked by process 797.
+E   HINT:  See server log for query details.
+
+asyncpg/protocol/protocol.pyx:197: DeadlockDetectedError
+
+The above exception was the direct cause of the following exception:
+
+self = &lt;sqlalchemy.engine.base.Connection object at 0x7aedde877ad0&gt;
+dialect = &lt;sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x7aeddfefe9c0&gt;
+context = &lt;sqlalchemy.dialects.postgresql.asyncpg.PGExecutionContext_asyncpg object at 0x7aedde732780&gt;
+statement = &lt;sqlalchemy.dialects.postgresql.base.PGDDLCompiler object at 0x7aedde731e50&gt;
+parameters = [()]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -&gt; CursorResult[Unpack[TupleAny]]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+
+        effective_parameters: Optional[_AnyExecuteParams]
+
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+
+        evt_handled: bool = False
+        try:
+            if self._has_events or self.engine._has_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    str_statement, effective_parameters = fn(
+                        self,
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                        context.executemany,
+                    )
+
+            if self._echo:
+                self._log_info(str_statement)
+
+                stats = context._get_cache_stats()
+
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            effective_parameters,
+                            batches=10,
+                            ismulti=context.executemany,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+&gt;                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1946:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: in do_execute
+    cursor.execute(statement, parameters)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:656: in execute
+    await_(self._prepare_and_execute(operation, parameters))
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:167: in await_
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:205: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:618: in _prepare_and_execute
+    self._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:568: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:847: in _handle_exception
+    super()._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py:412: in _handle_exception
+    self._handle_exception_no_connection(self.dbapi, error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = &lt;class 'sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_connection'&gt;
+dbapi = &lt;sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi object at 0x7aede01779b0&gt;
+error = DeadlockDetectedError('deadlock detected')
+
+    @classmethod
+    def _handle_exception_no_connection(
+        cls, dbapi: Any, error: Exception
+    ) -&gt; NoReturn:
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = dbapi._asyncpg_error_translate
+
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    message = error.args[0]
+                    translated_error = exception_mapping[super_](
+                        message, error
+                    )
+&gt;                   raise translated_error from error
+E                   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: deadlock detected
+
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:840: Error
+
+The above exception was the direct cause of the following exception:
+
+    def finalizer() -&gt; None:
+        """Yield again, to finalize."""
+
+        async def async_finalizer() -&gt; None:
+            try:
+                await gen_obj.__anext__()  # type: ignore[union-attr]
+            except StopAsyncIteration:
+                pass
+            else:
+                msg = "Async generator fixture didn't stop."
+                msg += "Yield only once."
+                raise ValueError(msg)
+
+        task = _create_task_in_context(event_loop, async_finalizer(), context)
+&gt;       event_loop.run_until_complete(task)
+
+/usr/local/lib/python3.12/site-packages/pytest_asyncio/plugin.py:363:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/local/lib/python3.12/asyncio/base_events.py:691: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/pytest_asyncio/plugin.py:354: in async_finalizer
+    await gen_obj.__anext__()  # type: ignore[union-attr]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:78: in reset_schema
+    await conn.run_sync(Base.metadata.drop_all)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py:907: in run_sync
+    return await greenlet_spawn(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:210: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:6726: in drop_all
+    bind._run_ddl_visitor(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2439: in _run_ddl_visitor
+    ).traverse_single(element)
+      ^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/visitors.py:650: in traverse_single
+    return meth(obj, **kw)
+           ^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/ddl.py:1638: in visit_metadata
+    self.traverse_single(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/visitors.py:650: in traverse_single
+    return meth(obj, **kw)
+           ^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/ddl.py:1716: in visit_table
+    table_dropper_ddl._invoke_with(self.connection)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/ddl.py:337: in _invoke_with
+    return bind.execute(self)
+           ^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1451: in execute
+    return meth(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/ddl.py:203: in _execute_on_connection
+    return connection._execute_ddl(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1560: in _execute_ddl
+    ret = self._execute_context(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1825: in _execute_context
+    return self._exec_single_context(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1965: in _exec_single_context
+    self._handle_dbapi_exception(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2335: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1946: in _exec_single_context
+    self.dialect.do_execute(
+/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: in do_execute
+    cursor.execute(statement, parameters)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:656: in execute
+    await_(self._prepare_and_execute(operation, parameters))
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:167: in await_
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/util/concurrency.py:205: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:618: in _prepare_and_execute
+    self._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:568: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:847: in _handle_exception
+    super()._handle_exception(error)
+/usr/local/lib/python3.12/site-packages/sqlalchemy/connectors/asyncio.py:412: in _handle_exception
+    self._handle_exception_no_connection(self.dbapi, error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = &lt;class 'sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_connection'&gt;
+dbapi = &lt;sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi object at 0x7aede01779b0&gt;
+error = DeadlockDetectedError('deadlock detected')
+
+    @classmethod
+    def _handle_exception_no_connection(
+        cls, dbapi: Any, error: Exception
+    ) -&gt; NoReturn:
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = dbapi._asyncpg_error_translate
+
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    message = error.args[0]
+                    translated_error = exception_mapping[super_](
+                        message, error
+                    )
+&gt;                   raise translated_error from error
+E                   sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) deadlock detected
+E                   [SQL:
+E                   DROP TABLE meal_plans]
+E                   (Background on this error at: https://sqlalche.me/e/21/dbapi)
+
+/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:840: DBAPIError</error></testcase><testcase classname="tests.test_quota" name="test_sync_quota_allows_then_blocks" time="0.766"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code">client = &lt;httpx.AsyncClient object at 0x7aeddec10aa0&gt;
+
+    async def test_sync_quota_allows_then_blocks(client: AsyncClient) -&gt; None:
+        _StubProvider.fetches = 0
+        token = await _token(client, UserRole.PROCUREMENT)
+
+        async with SessionLocal() as session:
+            settings = await get_or_create_settings(session)
+            settings.catalog_sync_per_day = 2
+            await session.commit()
+
+        with patch("app.catalog.service.MealtyProvider", _StubProvider):
+            first = await client.post("/api/catalog/sync", headers=_auth(token))
+            second = await client.post("/api/catalog/sync", headers=_auth(token))
+            third = await client.post("/api/catalog/sync", headers=_auth(token))
+
+        assert first.status_code == 200
+&gt;       assert second.status_code == 200
+E       assert 429 == 200
+E        +  where 429 = &lt;Response [429 Too Many Requests]&gt;.status_code
+
+tests/test_quota.py:102: AssertionError</failure></testcase><testcase classname="tests.test_quota" name="test_plan_limit_uses_personal_then_system" time="1.025" /><testcase classname="tests.test_quota" name="test_plan_limit_skipped_when_no_limits" time="0.742" /><testcase classname="tests.test_settings" name="test_settings_requires_auth" time="0.251" /><testcase classname="tests.test_settings" name="test_get_settings_returns_defaults" time="0.248" /><testcase classname="tests.test_settings" name="test_put_settings_full_replace" time="0.274" /><testcase classname="tests.test_settings" name="test_put_settings_rejects_bad_cutoff" time="0.245" /><testcase classname="tests.test_settings" name="test_put_settings_rejects_unknown_timezone" time="0.253" /><testcase classname="tests.test_user_active_status" name="test_user_active_status_survives_name_edit[True]" time="0.921" /><testcase classname="tests.test_user_active_status" name="test_user_active_status_survives_name_edit[False]" time="0.868" /><testcase classname="tests.test_user_active_status" name="test_openapi_requires_boolean_active_status" time="0.347" /><testcase classname="tests.test_users" name="test_admin_users_requires_auth" time="0.251" /><testcase classname="tests.test_users" name="test_admin_can_create_user" time="0.523" /><testcase classname="tests.test_users" name="test_admin_can_update_user" time="0.541" /><testcase classname="tests.test_users" name="test_admin_can_update_department" time="0.270" /></testsuite></testsuites>

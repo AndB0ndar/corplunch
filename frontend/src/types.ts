@@ -88,6 +88,14 @@ export type Order = {
     unavailable_count: number;
   }[];
 };
+export type CutoffResult = {
+  delivery_date: string;
+  status: Order['status'];
+  already_closed: boolean;
+  sync: 'ok' | 'skipped';
+  plans_closed: number;
+  items_unavailable: number;
+};
 export type Stats = {
   from: string;
   to: string;
@@ -131,7 +139,7 @@ export interface AppApi {
     items: { dish_id: number; qty: number }[],
   ): Promise<Plan>;
   order(date: string): Promise<Order>;
-  cutoff(date: string): Promise<void>;
+  cutoff(date: string): Promise<CutoffResult>;
   place(date: string): Promise<void>;
   sync(): Promise<void>;
   exportOrder(date: string, format: 'csv' | 'xlsx'): Promise<Blob>;

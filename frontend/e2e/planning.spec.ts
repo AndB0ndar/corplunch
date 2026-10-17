@@ -119,6 +119,13 @@ test('calendar, dirty polling, closed mobile plan and price directions', async (
     page.getByRole('button', { name: 'Увеличить Суп' }),
   ).toBeDisabled();
   await expect(
+    page.getByRole('button', { name: 'Уменьшить Суп' }),
+  ).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Увеличить Суп' })).toHaveCSS(
+    'background-color',
+    'rgb(236, 236, 231)',
+  );
+  await expect(
     page.getByRole('button', { name: 'Сохранить план' }),
   ).toHaveCount(0);
   await expect(page.getByText('Есть несохранённые изменения')).toHaveCount(0);
@@ -127,14 +134,30 @@ test('calendar, dirty polling, closed mobile plan and price directions', async (
   await page.reload();
   if (testInfo.project.name === 'mobile')
     await page.getByRole('button', { name: /^Мой план/ }).click();
-  await expect(page.getByText(/↑ Цена выросла/)).toBeVisible();
-  await expect(page.getByText(/↓ Цена снизилась/)).toBeVisible();
+  const increase = page.getByText(
+    `↑ Цена выросла: ${money(20000)} → ${money(25000)}`,
+    { exact: true },
+  );
+  const decrease = page.getByText(
+    `↓ Цена снизилась: ${money(20000)} → ${money(15000)}`,
+    { exact: true },
+  );
+  await expect(increase).toBeVisible();
+  await expect(decrease).toBeVisible();
+  await expect(increase).toHaveCSS('color', 'rgb(146, 112, 40)');
+  await expect(decrease).toHaveCSS('color', 'rgb(146, 112, 40)');
   await expect(
     page.getByText('Нет в меню Mealty', { exact: true }),
   ).toBeVisible();
   await expect(
     page.locator('.plan-total').filter({ hasText: 'К закупке' }),
   ).toContainText(money(40000));
+  await expect(total).toContainText(money(60000));
+  const removed = page.locator('.plan-list li').filter({ hasText: 'Пирог' });
+  await expect(removed.locator('.price-change')).toHaveCount(0);
+  await expect(
+    removed.getByRole('button', { name: 'Увеличить Пирог' }),
+  ).toBeDisabled();
   await expect(page.locator('.price-change')).toHaveCount(2);
   expect(
     await page.evaluate(

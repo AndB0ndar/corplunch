@@ -410,7 +410,13 @@ async def test_concurrent_cutoffs_create_exactly_one_order() -> None:
             return await run_cutoff(session, DELIVERY)
 
     with patch("app.catalog.service.MealtyProvider", _FailingProvider):
-        first, second = await asyncio.gather(_one(), _one())
+        # Drain both sessions before schema teardown, even if one call fails.
+        # Otherwise a live task can corrupt the following test's database state.
+        results = await asyncio.gather(_one(), _one(), return_exceptions=True)
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
+        first, second = results
 
     outcomes = {first.outcome, second.outcome}  # type: ignore[attr-defined]
     assert outcomes <= {CutoffOutcome.CLOSED, CutoffOutcome.ALREADY_CLOSED}
