@@ -1,7 +1,7 @@
 """Render office-order summary DTO to CSV / XLSX (no DB, no status changes).
 
-Bondar's export router (stage 3) will call these helpers on a live summary DTO
-and then flip `locked → exported`. This module only formats bytes.
+The export router calls these helpers on a live summary DTO, then flips
+`locked → exported`. This module only formats bytes.
 """
 
 from __future__ import annotations
@@ -61,6 +61,8 @@ def render_summary_xlsx(summary: Mapping[str, Any]) -> bytes:
     """DTO → XLSX: dish sheet (same columns as CSV) + «По сотрудникам»."""
     workbook = Workbook()
     dishes = workbook.active
+    if dishes is None:
+        raise RuntimeError("xlsx workbook has no active sheet")
     dishes.title = "Блюда"
     dishes.append(list(CSV_COLUMNS))
     for row in _items(summary):

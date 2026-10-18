@@ -240,3 +240,28 @@ async def test_collecting_is_live_and_does_not_persist() -> None:
         closed.totals.actual_kopecks - closed.totals.planned_kopecks
     )
     assert await _order_count() == 1
+
+
+async def test_collecting_keeps_priced_plan_visible_without_office_order() -> None:
+    """Cutoff can commit the price stamp and die before inserting the order."""
+    dishes = await _seed_fixture_catalog()
+    gnocchi = dishes["875"]
+    user_id = await _user("priced-open@summary.test", "Пётр После Сбоя")
+    plan_id = await _plan(user_id, [(gnocchi.id, 2, PLANNED)])
+    async with SessionLocal() as session:
+        plan = await session.get(MealPlan, plan_id)
+        assert plan is not None
+        plan.status = PlanStatus.PRICED
+        await session.commit()
+
+    summary = await _summary()
+
+    assert summary.status == OfficeOrderStatus.COLLECTING
+    assert summary.totals.actual_kopecks is None
+    assert summary.totals.delta_kopecks is None
+    assert summary.totals.planned_kopecks == 2 * PLANNED
+    assert [row.user_id for row in summary.by_employee] == [user_id]
+    assert summary.by_employee[0].actual_total_kopecks is None
+    assert summary.items[0].external_id == "875"
+    assert summary.items[0].qty == 2
+    assert await _order_count() == 0

@@ -173,7 +173,7 @@ Query: `category?`, `q?` (поиск по названию), `available_only` (d
 
 Доступ: закупки.
 
-Пока строки `office_orders` нет, тот же `GET` отдаёт живой вид, не 404: `status: "collecting"`, `by_employee` из draft-планов даты, `items` — предпросмотр по блюдам по текущей цене каталога. `totals.actual_kopecks`, `totals.delta_kopecks` и `by_employee[].actual_total_kopecks` — `null` (фактические цены ещё не зафиксированы). Запись в БД не создаётся.
+Пока строки `office_orders` нет, тот же `GET` отдаёт живой вид, не 404: `status: "collecting"`, `by_employee` из планов даты в `draft`, `locked` или `priced` (чтобы срыв cutoff после stamp цен не прятал людей), `items` — предпросмотр по блюдам по текущей цене каталога. `totals.actual_kopecks`, `totals.delta_kopecks` и `by_employee[].actual_total_kopecks` — `null` (фактические цены ещё не зафиксированы). Запись в БД не создаётся.
 
 ```json
 {

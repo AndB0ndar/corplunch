@@ -431,10 +431,12 @@ async def _collecting_summary(
     session: AsyncSession,
     delivery_date: date,
 ) -> OrderSummary:
+    # `priced` (and `locked`) with no office order is a cutoff that died after
+    # the price stamp. Those people must stay visible so cutoff can be retried.
     plans = await _plans_for(
         session,
         delivery_date,
-        PlanStatus.DRAFT,
+        (PlanStatus.DRAFT, PlanStatus.LOCKED, PlanStatus.PRICED),
         with_dishes=True,
     )
     employees, planned, unavailable_count = await _employee_rows(
@@ -459,10 +461,11 @@ async def _collecting_summary(
 async def _plans_for(
     session: AsyncSession,
     delivery_date: date,
-    status: PlanStatus,
+    status: PlanStatus | tuple[PlanStatus, ...],
     *,
     with_dishes: bool,
 ) -> list[MealPlan]:
+    statuses = (status,) if isinstance(status, PlanStatus) else status
     item_load = selectinload(MealPlan.items)
     if with_dishes:
         item_load = item_load.selectinload(PlanItem.dish)
@@ -472,7 +475,7 @@ async def _plans_for(
                 select(MealPlan)
                 .where(
                     MealPlan.delivery_date == delivery_date,
-                    MealPlan.status == status,
+                    MealPlan.status.in_(statuses),
                 )
                 .options(item_load)
             )

@@ -14,6 +14,14 @@ describe('Offline regression scenario', () => {
     await login('employee2');
     await api.savePlan(date, [{ dish_id: 1, qty: 1 }]);
     await login('procurement');
+    const open = await api.order(date);
+    expect(open.status).toBe('collecting');
+    expect(open.totals.actual_kopecks).toBeNull();
+    expect(open.totals.delta_kopecks).toBeNull();
+    expect(open.by_employee).toHaveLength(2);
+    expect(
+      open.by_employee.every((row) => row.actual_total_kopecks === null),
+    ).toBe(true);
     expect(await api.cutoff(date)).toMatchObject({
       already_closed: false,
       sync: 'ok',

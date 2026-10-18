@@ -164,14 +164,14 @@ function readPlan(date: string, userId: number): Plan {
 function plansOn(date: string) {
   return Object.values(state.plans).filter((p) => p.delivery_date === date);
 }
-function summarize(date: string, plans: Plan[]): Order {
+function summarize(date: string, plans: Plan[], priced = false): Order {
   const result: Order = {
     delivery_date: date,
     status: 'collecting',
     totals: {
       planned_kopecks: 0,
-      actual_kopecks: 0,
-      delta_kopecks: 0,
+      actual_kopecks: priced ? 0 : null,
+      delta_kopecks: priced ? 0 : null,
       unavailable_count: 0,
     },
     items: [],
@@ -203,18 +203,23 @@ function summarize(date: string, plans: Plan[]): Order {
           line_total_kopecks: price * item.qty,
         });
     }
-    result.totals.actual_kopecks = (result.totals.actual_kopecks ?? 0) + actual;
+    if (priced) {
+      result.totals.actual_kopecks =
+        (result.totals.actual_kopecks ?? 0) + actual;
+    }
     result.by_employee.push({
       user_id: user.id,
       full_name: user.full_name,
       department_id: user.department?.id ?? null,
       department_name: user.department?.name ?? null,
-      actual_total_kopecks: actual,
+      actual_total_kopecks: priced ? actual : null,
       unavailable_count: plan.items.filter((i) => i.unavailable).length,
     });
   }
-  result.totals.delta_kopecks =
-    (result.totals.actual_kopecks ?? 0) - result.totals.planned_kopecks;
+  if (priced) {
+    result.totals.delta_kopecks =
+      (result.totals.actual_kopecks ?? 0) - result.totals.planned_kopecks;
+  }
   return result;
 }
 export const demoApi: AppApi = {
@@ -309,7 +314,7 @@ export const demoApi: AppApi = {
         0,
       );
     }
-    state.orders[date] = { ...summarize(date, plans), status: 'locked' };
+    state.orders[date] = { ...summarize(date, plans, true), status: 'locked' };
     persist();
     return {
       delivery_date: date,
