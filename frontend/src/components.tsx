@@ -69,10 +69,11 @@ export function Metrics({
   collecting = false,
 }: {
   planned: number;
-  actual: number;
+  actual: number | null;
   unavailable?: number;
   collecting?: boolean;
 }) {
+  const priced = actual !== null && !collecting;
   return (
     <div className="metrics">
       <div>
@@ -83,14 +84,14 @@ export function Metrics({
         <span>
           {collecting ? 'Предварительная сумма' : 'Фактическая сумма'}
         </span>
-        <strong>{money(actual)}</strong>
+        <strong>{actual === null ? '—' : money(actual)}</strong>
       </div>
       <div>
         <span>Разница с планом</span>
-        <strong className={actual > planned ? 'ochre' : ''}>
-          {collecting
-            ? '—'
-            : `${actual > planned ? '+' : ''}${money(actual - planned)}`}
+        <strong className={priced && actual > planned ? 'ochre' : ''}>
+          {priced
+            ? `${actual > planned ? '+' : ''}${money(actual - planned)}`
+            : '—'}
         </strong>
       </div>
       <div>

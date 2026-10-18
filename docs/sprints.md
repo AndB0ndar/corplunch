@@ -289,17 +289,17 @@ gantt
 
 ### Бондарь
 
-- [ ] `GET /api/orders/{date}`**, агрегат,** `place`
+- [x] `GET /api/orders/{date}`**, агрегат,** `place`
   - Пакет `orders/`. Сводка: totals (план/факт/дельта/`unavailable_count`), `items` по блюдам, `by_employee` — как в [api.md](api.md). Только позиции с `unavailable=false`.
   - Доступ: закупки/админ.
   - `POST /api/orders/{date}/place`: статус `placed`, кто и когда. 403 если ещё `collecting`. Идемпотентно, если уже `placed`.
   - Статусы заказа: `collecting → locked → exported → placed`.
 
-- [ ] **Экспорт в роутере**
+- [x] **Экспорт в роутере**
   - `GET /api/orders/{date}/export.csv` и `export.xlsx`: вызвать рендер Пягая на **живом** DTO сводки, затем `locked → exported` (если ещё не `placed`).
   - Не реализовывать корзину Mealty.
 
-- [ ] **Pytest сводки, place и экспорта**
+- [x] **Pytest сводки, place и экспорта**
   - В сумму и `items` не входят позиции с `unavailable=true`.
   - Повторный `place` идемпотентен. Успешный экспорт переводит заказ `locked → exported`.
   - Копейки, не float. Живой mealty.ru не вызывать.

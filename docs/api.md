@@ -173,15 +173,54 @@ Query: `category?`, `q?` (поиск по названию), `available_only` (d
 
 Доступ: закупки.
 
+Пока строки `office_orders` нет, тот же `GET` отдаёт живой вид, не 404: `status: "collecting"`, `by_employee` из draft-планов даты, `items` — предпросмотр по блюдам по текущей цене каталога. `totals.actual_kopecks`, `totals.delta_kopecks` и `by_employee[].actual_total_kopecks` — `null` (фактические цены ещё не зафиксированы). Запись в БД не создаётся.
+
+```json
+{
+  "delivery_date": "2026-09-16",
+  "status": "collecting",
+  "totals": {
+    "planned_kopecks": 82000,
+    "actual_kopecks": null,
+    "delta_kopecks": null,
+    "unavailable_count": 0
+  },
+  "items": [
+    {
+      "dish_id": 12,
+      "external_id": "875",
+      "name": "Картофельные ньокки с грибами",
+      "qty": 2,
+      "unit_price_kopecks": 41000,
+      "line_total_kopecks": 82000
+    }
+  ],
+  "by_employee": [
+    {
+      "user_id": 1,
+      "full_name": "Иван Сотрудник",
+      "department_id": 1,
+      "department_name": "Разработка",
+      "actual_total_kopecks": null,
+      "unavailable_count": 0
+    }
+  ]
+}
+```
+
+`planned_kopecks`, `actual_kopecks` и `delta_kopecks` считаются только по позициям с `unavailable = false`; `delta_kopecks = actual_kopecks − planned_kopecks`. Недоступные позиции видны только через `unavailable_count` (в totals и в строке сотрудника). В `items` закрытого дня они не попадают: `items` — снимок `office_order_items` (имя и `external_id` — JOIN с `dishes`), `by_employee`, `planned_kopecks` и `unavailable_count` пересчитываются из `plan_items` планов `included_in_order`.
+
 ### `GET /api/orders/{date}/export.csv`
 
-CSV: колонки `external_id, name, qty, unit_price_kopecks, line_total_kopecks`.
+CSV: колонки `external_id, name, qty, unit_price_kopecks, line_total_kopecks`. UTF-8 с BOM (`utf-8-sig`), `Content-Type: text/csv; charset=utf-8`, `Content-Disposition: attachment`.
 
-Переводит статус `locked → exported` (если ещё не placed).
+Переводит статус `locked → exported` (если ещё не placed). Если заказ уже `placed`, файл отдаётся, статус не откатывается.
+
+403 `{"detail": "день ещё собирается"}`, если день ещё `collecting` (строки `office_orders` нет) — то же правило, что у `place`.
 
 ### `GET /api/orders/{date}/export.xlsx`
 
-Тот же набор + лист «По сотрудникам».
+Тот же набор + лист «По сотрудникам». Те же правила статуса и 403 в collecting. `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`.
 
 ### `POST /api/orders/{date}/cutoff`
 
@@ -218,7 +257,21 @@ CSV: колонки `external_id, name, qty, unit_price_kopecks, line_total_kope
 
 Тело необязательно. Ставит `placed`, пишет кто и когда.
 
-403, если ещё `collecting` (cutoff не прошёл). Идемпотентно, если уже `placed`.
+403 `{"detail": "день ещё собирается"}`, если ещё `collecting` (cutoff не прошёл, строки `office_orders` нет). Идемпотентно, если уже `placed`: 200, первый `placed_at` и `placed_by_user_id` сохраняются.
+
+Ответ 200:
+
+```json
+{
+  "delivery_date": "2026-09-16",
+  "status": "placed",
+  "placed_at": "2026-09-15T13:05:00+00:00",
+  "placed_by_user_id": 3,
+  "already_placed": false
+}
+```
+
+`already_placed: true` — повторный вызов; поля «кто и когда» остаются от первого размещения.
 
 ## Статистика
 

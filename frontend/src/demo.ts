@@ -203,7 +203,7 @@ function summarize(date: string, plans: Plan[]): Order {
           line_total_kopecks: price * item.qty,
         });
     }
-    result.totals.actual_kopecks += actual;
+    result.totals.actual_kopecks = (result.totals.actual_kopecks ?? 0) + actual;
     result.by_employee.push({
       user_id: user.id,
       full_name: user.full_name,
@@ -214,7 +214,7 @@ function summarize(date: string, plans: Plan[]): Order {
     });
   }
   result.totals.delta_kopecks =
-    result.totals.actual_kopecks - result.totals.planned_kopecks;
+    (result.totals.actual_kopecks ?? 0) - result.totals.planned_kopecks;
   return result;
 }
 export const demoApi: AppApi = {

@@ -1,21 +1,35 @@
-"""Close a delivery day: best-effort sync → price stamp → office order."""
+"""Close a delivery day and serve the procurement summary.
+
+Cutoff stays the single writer of the snapshot. The summary builder only reads:
+closed days take `items` from that snapshot, collecting days preview live drafts.
+"""
 
 import enum
 import logging
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Literal
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.catalog.models import Dish
 from app.catalog.service import EmptySnapshotError, sync_live_catalog
+from app.orders.export_render import render_summary_csv, render_summary_xlsx
 from app.orders.models import OfficeOrder, OfficeOrderItem, OfficeOrderStatus
+from app.orders.schemas import (
+    EmployeeRowOut,
+    OrderItemOut,
+    OrderSummary,
+    OrderTotals,
+    PlaceOut,
+)
 from app.planning.models import MealPlan, PlanItem, PlanStatus
 from app.planning.service import apply_actual_prices
 from app.providers import MealtyError
+from app.users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -209,3 +223,346 @@ async def run_cutoff(session: AsyncSession, delivery_date: date) -> CutoffResult
         items_unavailable=items_unavailable,
         order_status=OfficeOrderStatus.LOCKED,
     )
+
+
+DAY_STILL_COLLECTING_DETAIL = "день ещё собирается"
+
+CSV_MEDIA_TYPE = "text/csv; charset=utf-8"
+XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+ExportKind = Literal["csv", "xlsx"]
+
+
+class DayStillCollecting(Exception):
+    """No office order for the date: place and export are forbidden."""
+
+
+@dataclass(frozen=True, slots=True)
+class ExportFile:
+    body: bytes
+    media_type: str
+    filename: str
+
+
+@dataclass(slots=True)
+class _DishPreview:
+    dish_id: int
+    external_id: str
+    name: str
+    qty: int
+    unit_price_kopecks: int
+
+
+async def build_order_summary(
+    session: AsyncSession,
+    delivery_date: date,
+) -> OrderSummary:
+    """Read-only summary. No office-order row means collecting, not 404."""
+    order = await find_office_order(session, delivery_date)
+    if order is None:
+        return await _collecting_summary(session, delivery_date)
+    return await _closed_summary(session, delivery_date, order)
+
+
+async def place_order(
+    session: AsyncSession,
+    delivery_date: date,
+    user_id: int,
+) -> PlaceOut:
+    """First `place` wins. A repeat returns the original who/when.
+
+    `UPDATE … WHERE status <> 'placed'` so concurrent calls do not overwrite
+    `placed_at` / `placed_by_user_id`. No row → `DayStillCollecting`.
+    """
+    now = datetime.now(UTC)
+    placed = (
+        await session.execute(
+            update(OfficeOrder)
+            .where(
+                OfficeOrder.delivery_date == delivery_date,
+                OfficeOrder.status != OfficeOrderStatus.PLACED,
+            )
+            .values(
+                status=OfficeOrderStatus.PLACED,
+                placed_at=now,
+                placed_by_user_id=user_id,
+            )
+            .returning(
+                OfficeOrder.placed_at,
+                OfficeOrder.placed_by_user_id,
+            )
+        )
+    ).first()
+    if placed is not None:
+        await session.commit()
+        return PlaceOut(
+            delivery_date=delivery_date,
+            status=OfficeOrderStatus.PLACED,
+            placed_at=placed.placed_at,
+            placed_by_user_id=placed.placed_by_user_id,
+            already_placed=False,
+        )
+
+    current = await session.scalar(
+        select(OfficeOrder)
+        .where(OfficeOrder.delivery_date == delivery_date)
+        .execution_options(populate_existing=True)
+    )
+    if (
+        current is None
+        or current.status != OfficeOrderStatus.PLACED
+        or current.placed_at is None
+        or current.placed_by_user_id is None
+    ):
+        raise DayStillCollecting(DAY_STILL_COLLECTING_DETAIL)
+    return PlaceOut(
+        delivery_date=delivery_date,
+        status=OfficeOrderStatus.PLACED,
+        placed_at=current.placed_at,
+        placed_by_user_id=current.placed_by_user_id,
+        already_placed=True,
+    )
+
+
+async def build_export(
+    session: AsyncSession,
+    delivery_date: date,
+    kind: ExportKind,
+) -> ExportFile:
+    """Render the live summary, then `locked → exported` in the same commit.
+
+    `placed` is left alone. No office order → `DayStillCollecting` (no file).
+    """
+    order = await find_office_order(session, delivery_date)
+    if order is None:
+        raise DayStillCollecting(DAY_STILL_COLLECTING_DETAIL)
+
+    summary = await build_order_summary(session, delivery_date)
+    payload = summary.model_dump(mode="json")
+    if kind == "csv":
+        body = render_summary_csv(payload)
+        media_type = CSV_MEDIA_TYPE
+        extension = "csv"
+    elif kind == "xlsx":
+        body = render_summary_xlsx(payload)
+        media_type = XLSX_MEDIA_TYPE
+        extension = "xlsx"
+    else:
+        raise ValueError(f"unsupported export kind: {kind}")
+
+    if order.status == OfficeOrderStatus.LOCKED:
+        await session.execute(
+            update(OfficeOrder)
+            .where(
+                OfficeOrder.id == order.id,
+                OfficeOrder.status == OfficeOrderStatus.LOCKED,
+            )
+            .values(status=OfficeOrderStatus.EXPORTED)
+        )
+        await session.commit()
+
+    return ExportFile(
+        body=body,
+        media_type=media_type,
+        filename=f"corplunch-{delivery_date.isoformat()}.{extension}",
+    )
+
+
+async def _closed_summary(
+    session: AsyncSession,
+    delivery_date: date,
+    order: OfficeOrder,
+) -> OrderSummary:
+    item_rows = (
+        await session.execute(
+            select(
+                OfficeOrderItem.dish_id,
+                Dish.external_id,
+                Dish.name,
+                OfficeOrderItem.qty,
+                OfficeOrderItem.unit_price_kopecks,
+                OfficeOrderItem.line_total_kopecks,
+            )
+            .join(Dish, Dish.id == OfficeOrderItem.dish_id)
+            .where(OfficeOrderItem.office_order_id == order.id)
+            .order_by(Dish.name, OfficeOrderItem.dish_id)
+        )
+    ).all()
+    items = [
+        OrderItemOut(
+            dish_id=row.dish_id,
+            external_id=row.external_id,
+            name=row.name,
+            qty=row.qty,
+            unit_price_kopecks=row.unit_price_kopecks,
+            line_total_kopecks=row.line_total_kopecks,
+        )
+        for row in item_rows
+    ]
+    items.sort(key=lambda item: (item.name, item.dish_id))
+
+    plans = await _plans_for(
+        session,
+        delivery_date,
+        PlanStatus.INCLUDED_IN_ORDER,
+        with_dishes=False,
+    )
+    employees, planned, unavailable_count = await _employee_rows(
+        session,
+        plans,
+        priced=True,
+    )
+    actual = sum(item.line_total_kopecks for item in items)
+    return OrderSummary(
+        delivery_date=delivery_date,
+        status=order.status,
+        totals=OrderTotals(
+            planned_kopecks=planned,
+            actual_kopecks=actual,
+            delta_kopecks=actual - planned,
+            unavailable_count=unavailable_count,
+        ),
+        items=items,
+        by_employee=employees,
+    )
+
+
+async def _collecting_summary(
+    session: AsyncSession,
+    delivery_date: date,
+) -> OrderSummary:
+    plans = await _plans_for(
+        session,
+        delivery_date,
+        PlanStatus.DRAFT,
+        with_dishes=True,
+    )
+    employees, planned, unavailable_count = await _employee_rows(
+        session,
+        plans,
+        priced=False,
+    )
+    return OrderSummary(
+        delivery_date=delivery_date,
+        status=OfficeOrderStatus.COLLECTING,
+        totals=OrderTotals(
+            planned_kopecks=planned,
+            actual_kopecks=None,
+            delta_kopecks=None,
+            unavailable_count=unavailable_count,
+        ),
+        items=_preview_items(plans),
+        by_employee=employees,
+    )
+
+
+async def _plans_for(
+    session: AsyncSession,
+    delivery_date: date,
+    status: PlanStatus,
+    *,
+    with_dishes: bool,
+) -> list[MealPlan]:
+    item_load = selectinload(MealPlan.items)
+    if with_dishes:
+        item_load = item_load.selectinload(PlanItem.dish)
+    return list(
+        (
+            await session.scalars(
+                select(MealPlan)
+                .where(
+                    MealPlan.delivery_date == delivery_date,
+                    MealPlan.status == status,
+                )
+                .options(item_load)
+            )
+        ).all()
+    )
+
+
+async def _employee_rows(
+    session: AsyncSession,
+    plans: list[MealPlan],
+    *,
+    priced: bool,
+) -> tuple[list[EmployeeRowOut], int, int]:
+    """One row per plan, including a plan whose every item is unavailable."""
+    users = await _users_by_id(session, [plan.user_id for plan in plans])
+    planned = 0
+    unavailable_count = 0
+    rows: list[EmployeeRowOut] = []
+    for plan in plans:
+        user = users[plan.user_id]
+        department = user.department
+        person_unavailable = 0
+        person_actual = 0
+        for item in plan.items:
+            if item.unavailable:
+                person_unavailable += 1
+                unavailable_count += 1
+                continue
+            planned += item.planned_price_kopecks * item.qty
+            if priced and item.actual_price_kopecks is not None:
+                person_actual += item.actual_price_kopecks * item.qty
+        rows.append(
+            EmployeeRowOut(
+                user_id=user.id,
+                full_name=user.full_name,
+                department_id=user.department_id,
+                department_name=(department.name if department is not None else None),
+                actual_total_kopecks=person_actual if priced else None,
+                unavailable_count=person_unavailable,
+            )
+        )
+    rows.sort(key=lambda row: (row.full_name, row.user_id))
+    return rows, planned, unavailable_count
+
+
+async def _users_by_id(
+    session: AsyncSession,
+    user_ids: list[int],
+) -> dict[int, User]:
+    if not user_ids:
+        return {}
+    rows = (
+        await session.scalars(
+            select(User)
+            .where(User.id.in_(user_ids))
+            .options(selectinload(User.department))
+        )
+    ).all()
+    return {user.id: user for user in rows}
+
+
+def _preview_items(plans: list[MealPlan]) -> list[OrderItemOut]:
+    """Collecting preview: current catalog price, unavailable rows omitted."""
+    buckets: dict[int, _DishPreview] = {}
+    for plan in plans:
+        for item in plan.items:
+            if item.unavailable:
+                continue
+            dish = item.dish
+            bucket = buckets.get(item.dish_id)
+            if bucket is None:
+                buckets[item.dish_id] = _DishPreview(
+                    dish_id=item.dish_id,
+                    external_id=dish.external_id,
+                    name=dish.name,
+                    qty=item.qty,
+                    unit_price_kopecks=dish.price_kopecks,
+                )
+            else:
+                bucket.qty += item.qty
+    items = [
+        OrderItemOut(
+            dish_id=bucket.dish_id,
+            external_id=bucket.external_id,
+            name=bucket.name,
+            qty=bucket.qty,
+            unit_price_kopecks=bucket.unit_price_kopecks,
+            line_total_kopecks=bucket.unit_price_kopecks * bucket.qty,
+        )
+        for bucket in buckets.values()
+    ]
+    items.sort(key=lambda item: (item.name, item.dish_id))
+    return items
