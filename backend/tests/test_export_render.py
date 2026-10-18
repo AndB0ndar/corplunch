@@ -23,7 +23,12 @@ def _summary() -> dict:
 
 
 def test_render_summary_csv_columns_and_rows() -> None:
-    raw = render_summary_csv(_summary())
+    summary = _summary()
+    line_total = sum(item["line_total_kopecks"] for item in summary["items"])
+    employee_total = sum(row["actual_total_kopecks"] for row in summary["by_employee"])
+    assert line_total == employee_total == summary["totals"]["actual_kopecks"]
+
+    raw = render_summary_csv(summary)
     text = raw.decode("utf-8-sig")
     rows = list(csv.DictReader(io.StringIO(text)))
     assert list(rows[0].keys()) == list(CSV_COLUMNS)

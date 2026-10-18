@@ -58,7 +58,7 @@ Pytest использует отдельную базу `corplunch_test` в те
 ## Какие проверки используют моки
 
 - `frontend/e2e/cutoff-result.spec.ts` проверяет сообщения `ok` / `skipped` / `already_closed` на desktop/mobile с HTTP-подменами. Входит в обычный `npm run test:e2e`.
-- `backend/tests/test_orders_cutoff.py` вызывает настоящий FastAPI через ASGI и PostgreSQL, подменяя только MealtyProvider. Проверяет ручное закрытие для закупок/админа, изменение цены, снятие блюда и сохранённый общий заказ. Известный дефект нового плана после досрочного закрытия отмечен `xfail(strict=True)` — это не PASS. Для воспроизведения без этой отметки: `docker compose --env-file tests/.env.test exec -T api python -m pytest -q tests/test_orders_cutoff.py -k new_employee --runxfail`. Описание: [QA-CUTOFF-01](../docs/artefacts/tests/qa-cutoff.md).
+- `backend/tests/test_orders_cutoff.py` вызывает настоящий FastAPI через ASGI и PostgreSQL, подменяя только MealtyProvider. Проверяет ручное закрытие для закупок/админа, изменение цены, снятие блюда, сохранённый общий заказ и запрет нового плана после досрочного закрытия. Описание: [QA-CUTOFF-01](../docs/artefacts/tests/qa-cutoff.md).
 - Live-тест cutoff сравнивает сохранённые `dish_id`, `qty` и плановые цены. Фактические цены и `unavailable` могут измениться после фонового закрытия; для рассчитанного плана отдельно проверяется фактическая сумма без недоступных позиций. Этот тест не ждёт 10-минутного задания и сам по себе не доказывает его выполнение; job покрыт серверными тестами.
 
 - Изолированные frontend-тесты подменяют API; браузерные сценарии обработки ошибок используют HTTP-подмены.

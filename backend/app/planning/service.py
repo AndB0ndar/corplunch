@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.catalog.models import Dish
+from app.orders.models import OfficeOrder
 from app.planning.models import MealPlan, PlanItem, PlanStatus
 from app.planning.schemas import PlanItemOut, PlanOut, PlanReplace
 from app.users.models import Settings, User, UserRole
@@ -24,6 +25,7 @@ class EditablePlan:
     plan: MealPlan | None
     settings: Settings
     delivery_date: date
+    day_closed: bool
 
 
 @dataclass(frozen=True)
@@ -56,8 +58,10 @@ def is_editable(
     delivery_date: date,
     plan_status: PlanStatus | None,
     settings: Settings,
+    *,
+    day_closed: bool,
 ) -> bool:
-    """True while now is strictly before the cutoff and the plan is draft or absent."""
+    """True while the clock and plan are open and no office order exists."""
     tz = ZoneInfo(settings.timezone)
     now = _now(tz)
     if now.tzinfo is None:
@@ -66,7 +70,7 @@ def is_editable(
         now = now.astimezone(tz)
     clock_open = now < cutoff_deadline(delivery_date, settings)
     status_open = plan_status is None or plan_status == PlanStatus.DRAFT
-    return clock_open and status_open
+    return clock_open and status_open and not day_closed
 
 
 def _planned_total(items: list[PlanItem]) -> int:
@@ -83,14 +87,24 @@ def _actual_total(items: list[PlanItem], plan_status: PlanStatus) -> int | None:
     )
 
 
-def _to_out(plan: MealPlan, settings: Settings) -> PlanOut:
+def _to_out(
+    plan: MealPlan,
+    settings: Settings,
+    *,
+    day_closed: bool,
+) -> PlanOut:
     items = list(plan.items)
     return PlanOut(
         id=plan.id,
         user_id=plan.user_id,
         delivery_date=plan.delivery_date,
         status=plan.status,
-        editable=is_editable(plan.delivery_date, plan.status, settings),
+        editable=is_editable(
+            plan.delivery_date,
+            plan.status,
+            settings,
+            day_closed=day_closed,
+        ),
         planned_total_kopecks=_planned_total(items),
         actual_total_kopecks=_actual_total(items, plan.status),
         items=[
@@ -112,13 +126,19 @@ def _empty_out(
     user_id: int,
     delivery_date: date,
     settings: Settings,
+    day_closed: bool,
 ) -> PlanOut:
     return PlanOut(
         id=None,
         user_id=user_id,
         delivery_date=delivery_date,
         status=PlanStatus.DRAFT,
-        editable=is_editable(delivery_date, None, settings),
+        editable=is_editable(
+            delivery_date,
+            None,
+            settings,
+            day_closed=day_closed,
+        ),
         planned_total_kopecks=0,
         actual_total_kopecks=None,
         items=[],
@@ -145,6 +165,14 @@ async def _find_plan(
             populate_existing=True,
         )
     return await session.scalar(stmt)
+
+
+async def _day_closed(session: AsyncSession, delivery_date: date) -> bool:
+    """True when an office order exists for the date, in any status."""
+    order_id = await session.scalar(
+        select(OfficeOrder.id).where(OfficeOrder.delivery_date == delivery_date)
+    )
+    return order_id is not None
 
 
 async def _subject_user(
@@ -177,13 +205,15 @@ async def get_plan(
     settings = await get_or_create_settings(session)
     subject = await _subject_user(session, actor, user_id)
     plan = await _find_plan(session, subject.id, delivery_date)
+    day_closed = await _day_closed(session, delivery_date)
     if plan is None:
         return _empty_out(
             user_id=subject.id,
             delivery_date=delivery_date,
             settings=settings,
+            day_closed=day_closed,
         )
-    return _to_out(plan, settings)
+    return _to_out(plan, settings, day_closed=day_closed)
 
 
 async def load_editable_employee_plan(
@@ -199,8 +229,14 @@ async def load_editable_employee_plan(
         )
     settings = await get_or_create_settings(session)
     plan = await _find_plan(session, user.id, delivery_date, for_update=True)
+    day_closed = await _day_closed(session, delivery_date)
     plan_status = plan.status if plan is not None else None
-    if not is_editable(delivery_date, plan_status, settings):
+    if not is_editable(
+        delivery_date,
+        plan_status,
+        settings,
+        day_closed=day_closed,
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cutoff passed",
@@ -211,6 +247,7 @@ async def load_editable_employee_plan(
         plan=plan,
         settings=settings,
         delivery_date=delivery_date,
+        day_closed=day_closed,
     )
 
 
@@ -288,7 +325,7 @@ async def replace_plan(ctx: EditablePlan, body: PlanReplace) -> PlanOut:
 
     stored = await _find_plan(session, ctx.user.id, ctx.delivery_date)
     assert stored is not None
-    return _to_out(stored, ctx.settings)
+    return _to_out(stored, ctx.settings, day_closed=ctx.day_closed)
 
 
 async def apply_actual_prices(

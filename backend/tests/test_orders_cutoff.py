@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from app.catalog.models import Dish
 from app.db import SessionLocal
 from app.orders.models import OfficeOrder, OfficeOrderItem
+from app.planning.models import MealPlan
 from app.providers import MealtyError, NormalizedDish, parse_html
 from app.users.models import User, UserRole
 
@@ -92,6 +93,16 @@ async def _office_order_count() -> int:
     return int(count or 0)
 
 
+async def _plan_count_for(user_id: int) -> int:
+    async with SessionLocal() as session:
+        count = await session.scalar(
+            select(func.count())
+            .select_from(MealPlan)
+            .where(MealPlan.user_id == user_id)
+        )
+    return int(count or 0)
+
+
 async def _employee_plan(
     client: AsyncClient,
     day: date,
@@ -169,14 +180,6 @@ async def test_cutoff_http_fixture_prices_and_excludes_removed_dish(
         ] == [(kept, 2, 42500, 85000)]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason=(
-        "QA-CUTOFF-01: new employee can create a plan after manual cutoff; "
-        "see docs/artefacts/tests/qa-cutoff.md"
-    ),
-)
 async def test_new_employee_cannot_create_plan_after_manual_cutoff(
     client: AsyncClient,
 ) -> None:
@@ -186,23 +189,27 @@ async def test_new_employee_cannot_create_plan_after_manual_cutoff(
     with patch("app.catalog.service.MealtyProvider", _FailingProvider):
         closed = await client.post(_path(FAR_FUTURE), headers=_auth(token))
     assert closed.status_code == 200
-    employee, _ = await _token(client, UserRole.EMPLOYEE, email="late@cutoff.test")
+    employee, employee_id = await _token(
+        client, UserRole.EMPLOYEE, email="late@cutoff.test"
+    )
     path = f"/api/plans/{FAR_FUTURE.isoformat()}"
     listed = await client.get(path, headers=_auth(employee))
     assert listed.status_code == 200
+    body = listed.json()
+    assert body["id"] is None
+    assert body["status"] == "draft"
+    assert body["items"] == []
+    assert body["editable"] is False
     saved = await client.put(
         path, headers=_auth(employee), json={"items": [{"dish_id": dish, "qty": 1}]}
     )
-    observed = {
-        "cutoff_http": closed.status_code,
-        "new_employee_editable": listed.json()["editable"],
-        "save_http": saved.status_code,
-    }
-    assert observed == {
-        "cutoff_http": 200,
-        "new_employee_editable": False,
-        "save_http": 403,
-    }
+    assert saved.status_code == 403
+    assert saved.json()["detail"] == "Cutoff passed"
+    assert await _plan_count_for(employee_id) == 0
+    again = await client.get(path, headers=_auth(employee))
+    assert again.status_code == 200
+    assert again.json()["id"] is None
+    assert again.json()["editable"] is False
 
 
 async def test_cutoff_forbidden_for_employee(client: AsyncClient) -> None:

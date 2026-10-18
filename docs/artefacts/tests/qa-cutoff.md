@@ -1,6 +1,24 @@
 # QA: интеграция cutoff после обновления backend
 
+## Закрытие QA-CUTOFF-01 и QA-CUTOFF-02 — 18.10.2026
+
+Серверная приёмка после фикса редактируемости. Стенд поднят `docker compose up --build`. Pytest выполнен внутри контейнера `api` (тесты скопированы в контейнер, dev-зависимости установлены; образ по-прежнему не включает `tests/test_*.py`).
+
+**Итог pytest: 153 passed, 0 failed, 0 skipped, 0 xfailed.** Ruff `check` на `app` и `tests` проходит. [JUnit](qa-evidence/cutoff-fix-compose-pytest.xml).
+
+Счётчик 17.10 (141 тест: 136 passed, 1 failed, 3 skipped, 1 xfailed) устарел: набор вырос, маршрут `place` уже есть, поэтому три прежних skip не воспроизводятся. Ожидание «137 passed и 3 skip» из плана фикса тоже устарело. Критерий «без failed и без xfail» выполнен.
+
+| Проверка | Результат |
+| --- | --- |
+| QA-CUTOFF-01 | Закрыт этим изменением. Тест без `xfail` входит в [полный прогон](qa-evidence/cutoff-fix-compose-pytest.xml). Повторно зафиксированы пустой шаблон (`id=null`, `items=[]`, `editable=false`), `403` `Cutoff passed` и отсутствие строки плана: [junit](qa-evidence/cutoff-01-assertions.xml) |
+| QA-CUTOFF-02 | Закрыт `db36e1c` (`INSERT … ON CONFLICT DO NOTHING` в `get_or_create_settings`). Три подряд зелёных прогона: [1](qa-evidence/cutoff-02-rerun-1.xml), [2](qa-evidence/cutoff-02-rerun-2.xml), [3](qa-evidence/cutoff-02-rerun-3.xml); тот же тест есть в [полном регрессе](qa-evidence/cutoff-fix-compose-pytest.xml) |
+| Живой сценарий QA-CUTOFF-01 | 18.10.2026, `http://localhost:8000`, дата `2026-11-27`: cutoff → 200 `locked`; новый сотрудник GET `editable=false`, `id=null`; PUT → 403 `Cutoff passed`; повторный GET по-прежнему `id=null` |
+
+`--runxfail` для QA-CUTOFF-01 больше не используется: отметка `xfail` снята.
+
 ## Повторная приёмка этапа 2 — 17.10.2026
+
+Исторический прогон. Дефекты ниже закрыты секцией от 18.10.2026; цифры этого дня не переписывались.
 
 Версия: `5407d48` + локальные изменения frontend/QA. Корневой Compose, `tests/.env.test`, отдельный проект `corplunch-tests`; pytest использует БД `corplunch_test`. Дубликатов Compose в `qa/` нет. Frontend — Vite 5181, настоящий API — 18000, браузер — Edge. Срок приёма сотруднику не показывается: согласованный бейдж «Приём закрыт».
 
@@ -59,7 +77,7 @@
 
 ## QA-CUTOFF-01 — новый план после досрочного закрытия
 
-**Статус:** открыт. **Приоритет:** высокий. **Ответственный за исправление:** backend.
+**Статус:** закрыт 18.10.2026 этим изменением. **Приоритет:** высокий. **Ответственный за исправление:** backend.
 
 **Предусловия:** дата доставки через 30 дней, обычный дедлайн не наступил. Сотрудник A сохранил одну позицию, у сотрудника B плана нет.
 
@@ -74,17 +92,11 @@
 
 **Причина по коду:** проверка редактирования учитывает время и статус личного плана, но не наличие закрытого общего заказа. Frontend следует серверному `editable`.
 
-**Воспроизведение:** после подготовки тестового контейнера по [инструкции](../../../tests/README.md):
-
-```powershell
-docker compose --env-file tests/.env.test exec -T api python -m pytest -q tests/test_orders_cutoff.py -k new_employee --runxfail
-```
-
-В обычном регрессе тест отмечен `xfail(strict=True)` с идентификатором дефекта. Это ожидаемый сбой, не PASS. После исправления backend успешное выполнение даст XPASS(strict), и отметку нужно снять. [Первичное воспроизведение](qa-evidence/cutoff-2026-10-16/cutoff-first.xml): 8 passed, 1 failed.
+**Воспроизведение до фикса:** после подготовки тестового контейнера по [инструкции](../../../tests/README.md) тест падал без отметки `xfail`. [Первичное воспроизведение](qa-evidence/cutoff-2026-10-16/cutoff-first.xml): 8 passed, 1 failed. Отметка `xfail(strict=True)` снята вместе с исправлением; `--runxfail` больше не нужен. Закрытие подтверждено [прогоном 18.10.2026](qa-evidence/cutoff-fix-compose-pytest.xml).
 
 ## QA-CUTOFF-02 — гонка первичного создания настроек
 
-**Статус:** открыт, проявление зависит от порядка выполнения запросов. **Ответственный за исправление:** backend.
+**Статус:** закрыт коммитом `db36e1c` (`fix(settings): race-safe get_or_create for singleton row`). Подтверждено 18.10.2026 тремя подряд зелёными прогонами `test_concurrent_cutoffs_create_exactly_one_order`: [1](qa-evidence/cutoff-02-rerun-1.xml), [2](qa-evidence/cutoff-02-rerun-2.xml), [3](qa-evidence/cutoff-02-rerun-3.xml), плюс тот же тест в [полном регрессе](qa-evidence/cutoff-fix-compose-pytest.xml). **Ответственный за исправление:** backend.
 
 На пустой тестовой базе два одновременных cutoff вызывают создание singleton-настроек. В первом полном прогоне `test_concurrent_cutoffs_create_exactly_one_order` упал с `UniqueViolationError: settings_pkey`: обе сессии попытались вставить строку `id=1`. В `get_or_create_settings` последовательность SELECT → INSERT не защищена от такого соревнования.
 
