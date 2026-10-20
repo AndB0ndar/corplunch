@@ -33,3 +33,13 @@ openspec
 tests/results/
 frontend/test-results/
 frontend/playwright-report/
+
+# --- Local Graphify installation and generated graph ---
+.tools/
+graphify-out/
+/.graphifyignore
+/graphify.cmd
+/docs/graphify.md
+/.codex/hooks.json
+/.codex/skills/graphify/
+/.agents/skills/graphify/
