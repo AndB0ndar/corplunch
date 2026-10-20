@@ -67,8 +67,8 @@ export type Order = {
   status: 'collecting' | 'locked' | 'exported' | 'placed';
   totals: {
     planned_kopecks: number;
-    actual_kopecks: number;
-    delta_kopecks: number;
+    actual_kopecks: number | null;
+    delta_kopecks: number | null;
     unavailable_count: number;
   };
   items: {
@@ -84,7 +84,7 @@ export type Order = {
     full_name: string;
     department_id: number | null;
     department_name: string | null;
-    actual_total_kopecks: number;
+    actual_total_kopecks: number | null;
     unavailable_count: number;
   }[];
 };

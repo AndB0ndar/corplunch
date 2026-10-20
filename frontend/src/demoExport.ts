@@ -38,7 +38,7 @@ export function exportDemo(order: Order, format: 'csv' | 'xlsx'): Blob {
     ...order.by_employee.map((u) => [
       u.full_name,
       u.department_name ?? '',
-      u.actual_total_kopecks,
+      u.actual_total_kopecks ?? 0,
       u.unavailable_count,
     ]),
   ];

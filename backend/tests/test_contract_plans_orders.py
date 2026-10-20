@@ -1,7 +1,7 @@
 """Pyagay stage-2 contract tests against Bondar plans/cutoff APIs.
 
 Uses shared Bearer fixtures from conftest (employee / procurement / admin).
-`POST /place` is stage-3 Bondar work — skipped until the route exists.
+`POST /place` runs when the route is present in the OpenAPI schema.
 """
 
 from __future__ import annotations
@@ -47,12 +47,13 @@ def _place_path(day: date) -> str:
 
 
 def _has_place_route() -> bool:
-    for route in app.routes:
-        path = getattr(route, "path", "") or ""
-        methods = getattr(route, "methods", set()) or set()
-        if path.endswith("/place") and "POST" in methods:
-            return True
-    return False
+    # Starlette 1.6 wraps include_router in _IncludedRouter, which has no
+    # path/methods. The generated schema is the stable place to look.
+    paths = app.openapi().get("paths", {})
+    return any(
+        path.endswith("/place") and "post" in operations
+        for path, operations in paths.items()
+    )
 
 
 async def _add_dish(external_id: str = "c-875", **overrides: object) -> int:

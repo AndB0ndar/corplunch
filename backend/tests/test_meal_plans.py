@@ -10,8 +10,8 @@ from sqlalchemy.orm import selectinload
 from app.catalog.models import Dish
 from app.db import SessionLocal
 from app.planning.models import MealPlan, PlanItem, PlanStatus
-from app.planning.service import ActualPriceStamp, apply_actual_prices
-from app.users.models import User, UserRole
+from app.planning.service import ActualPriceStamp, apply_actual_prices, is_editable
+from app.users.models import Settings, User, UserRole
 
 OPEN_DAY = date.today() + timedelta(days=30)
 CLOSED_DAY = date(2020, 1, 15)
@@ -321,6 +321,16 @@ async def test_before_deadline_is_editable(
     response = await client.get(_path(date(2026, 10, 5)), headers=_auth(token))
     assert response.status_code == 200
     assert response.json()["editable"] is True
+
+
+async def test_closed_day_blocks_edit_before_deadline() -> None:
+    settings = Settings(
+        cutoff_time="16:00",
+        timezone="Europe/Moscow",
+        mealty_city="Москва",
+    )
+    assert is_editable(OPEN_DAY, None, settings, day_closed=True) is False
+    assert is_editable(OPEN_DAY, None, settings, day_closed=False) is True
 
 
 @pytest.mark.parametrize(

@@ -100,7 +100,7 @@ Query: `category?`, `q?` (поиск по названию), `available_only` (d
 
 Свой план на дату (employee) или любой по `?user_id=` (закупки/админ).
 
-Если плана нет — пустой draft-шаблон без записи в БД: `id: null`, `items: []`, `editable` по cutoff.
+Если плана нет — пустой draft-шаблон без записи в БД: `id: null`, `items: []`. `editable` false, если дедлайн прошёл или день закрыт — есть строка общего заказа, в том числе у сотрудника без плана.
 
 ```json
 {
@@ -130,7 +130,7 @@ Query: `category?`, `q?` (поиск по названию), `available_only` (d
 
 Полная замена состава. Сервер проставляет `planned_price_kopecks` из текущего каталога.
 
-403 `Forbidden` — роль не `employee` (закупки и админ). 403 `Cutoff passed` — дедлайн прошёл или статус уже не `draft`. 409 — блюдо не найдено или `unavailable`. 422 — `qty < 1`, повтор `dish_id`, или превышен дневной лимит.
+403 `Forbidden` — роль не `employee` (закупки и админ). 403 `Cutoff passed` — дедлайн прошёл, статус уже не `draft`, или день закрыт (есть строка общего заказа, в том числе если плана ещё не было). 409 — блюдо не найдено или `unavailable`. 422 — `qty < 1`, повтор `dish_id`, или превышен дневной лимит.
 
 Доступ: только employee, только свой план. Админ чужие планы не редактирует (для демо достаточно seed).
 
@@ -173,15 +173,54 @@ Query: `category?`, `q?` (поиск по названию), `available_only` (d
 
 Доступ: закупки.
 
+Пока строки `office_orders` нет, тот же `GET` отдаёт живой вид, не 404: `status: "collecting"`, `by_employee` из планов даты в `draft`, `locked` или `priced` (чтобы срыв cutoff после stamp цен не прятал людей), `items` — предпросмотр по блюдам по текущей цене каталога. `totals.actual_kopecks`, `totals.delta_kopecks` и `by_employee[].actual_total_kopecks` — `null` (фактические цены ещё не зафиксированы). Запись в БД не создаётся.
+
+```json
+{
+  "delivery_date": "2026-09-16",
+  "status": "collecting",
+  "totals": {
+    "planned_kopecks": 82000,
+    "actual_kopecks": null,
+    "delta_kopecks": null,
+    "unavailable_count": 0
+  },
+  "items": [
+    {
+      "dish_id": 12,
+      "external_id": "875",
+      "name": "Картофельные ньокки с грибами",
+      "qty": 2,
+      "unit_price_kopecks": 41000,
+      "line_total_kopecks": 82000
+    }
+  ],
+  "by_employee": [
+    {
+      "user_id": 1,
+      "full_name": "Иван Сотрудник",
+      "department_id": 1,
+      "department_name": "Разработка",
+      "actual_total_kopecks": null,
+      "unavailable_count": 0
+    }
+  ]
+}
+```
+
+`planned_kopecks`, `actual_kopecks` и `delta_kopecks` считаются только по позициям с `unavailable = false`; `delta_kopecks = actual_kopecks − planned_kopecks`. Недоступные позиции видны только через `unavailable_count` (в totals и в строке сотрудника). В `items` закрытого дня они не попадают: `items` — снимок `office_order_items` (имя и `external_id` — JOIN с `dishes`), `by_employee`, `planned_kopecks` и `unavailable_count` пересчитываются из `plan_items` планов `included_in_order`.
+
 ### `GET /api/orders/{date}/export.csv`
 
-CSV: колонки `external_id, name, qty, unit_price_kopecks, line_total_kopecks`.
+CSV: колонки `external_id, name, qty, unit_price_kopecks, line_total_kopecks`. UTF-8 с BOM (`utf-8-sig`), `Content-Type: text/csv; charset=utf-8`, `Content-Disposition: attachment`.
 
-Переводит статус `locked → exported` (если ещё не placed).
+Переводит статус `locked → exported` (если ещё не placed). Если заказ уже `placed`, файл отдаётся, статус не откатывается.
+
+403 `{"detail": "день ещё собирается"}`, если день ещё `collecting` (строки `office_orders` нет) — то же правило, что у `place`.
 
 ### `GET /api/orders/{date}/export.xlsx`
 
-Тот же набор + лист «По сотрудникам».
+Тот же набор + лист «По сотрудникам». Те же правила статуса и 403 в collecting. `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`.
 
 ### `POST /api/orders/{date}/cutoff`
 
@@ -212,13 +251,27 @@ CSV: колонки `external_id, name, qty, unit_price_kopecks, line_total_kope
 
 400 `Empty day` — на дату нет ни одной позиции ни в одном плане (пустой состав при lock); job такой день молча пропускает.
 
-Ручной cutoff разрешён и до естественного дедлайна (демо не ждёт 16:00); после закрытия правки `PUT /api/plans/{date}` запрещены по статусу (403 `Cutoff passed`).
+Ручной cutoff разрешён и до естественного дедлайна (демо не ждёт 16:00); после закрытия правки `PUT /api/plans/{date}` запрещены (403 `Cutoff passed`), когда день закрыт — есть строка общего заказа, в том числе у сотрудника без плана на момент закрытия.
 
 ### `POST /api/orders/{date}/place`
 
 Тело необязательно. Ставит `placed`, пишет кто и когда.
 
-403, если ещё `collecting` (cutoff не прошёл). Идемпотентно, если уже `placed`.
+403 `{"detail": "день ещё собирается"}`, если ещё `collecting` (cutoff не прошёл, строки `office_orders` нет). Идемпотентно, если уже `placed`: 200, первый `placed_at` и `placed_by_user_id` сохраняются.
+
+Ответ 200:
+
+```json
+{
+  "delivery_date": "2026-09-16",
+  "status": "placed",
+  "placed_at": "2026-09-15T13:05:00+00:00",
+  "placed_by_user_id": 3,
+  "already_placed": false
+}
+```
+
+`already_placed: true` — повторный вызов; поля «кто и когда» остаются от первого размещения.
 
 ## Статистика
 

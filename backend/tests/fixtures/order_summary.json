@@ -2,8 +2,8 @@
   "delivery_date": "2026-10-16",
   "status": "locked",
   "totals": {
-    "planned_kopecks": 164000,
-    "actual_kopecks": 170000,
+    "planned_kopecks": 228000,
+    "actual_kopecks": 234000,
     "delta_kopecks": 6000,
     "unavailable_count": 1
   },

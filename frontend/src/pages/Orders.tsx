@@ -245,7 +245,9 @@ export function Orders() {
                       </small>
                     </span>
                     <strong>
-                      {money(person.actual_total_kopecks)}{' '}
+                      {person.actual_total_kopecks === null
+                        ? '—'
+                        : money(person.actual_total_kopecks)}{' '}
                       <span className="muted">⌄</span>
                     </strong>
                   </summary>

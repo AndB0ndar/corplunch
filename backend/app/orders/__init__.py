@@ -1,1 +1,1 @@
-"""Office orders: day cutoff (orchestrator, router, snapshot)."""
+"""Office orders: cutoff, day summary, place, and export."""

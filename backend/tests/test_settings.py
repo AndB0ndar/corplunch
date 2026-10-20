@@ -1,8 +1,11 @@
+import asyncio
+
 from httpx import AsyncClient
+from sqlalchemy import select
 
 from app.db import SessionLocal
 from app.users.models import Settings
-from app.users.settings_service import SETTINGS_ROW_ID
+from app.users.settings_service import SETTINGS_ROW_ID, get_or_create_settings
 
 
 async def test_settings_requires_auth(client: AsyncClient) -> None:
@@ -79,3 +82,22 @@ async def test_put_settings_rejects_unknown_timezone(
         },
     )
     assert response.status_code == 422
+
+async def test_concurrent_get_or_create_settings_creates_one_row() -> None:
+    """QA-CUTOFF-02: two empty-DB creators must not raise settings_pkey."""
+
+    async def _one() -> int:
+        async with SessionLocal() as session:
+            row = await get_or_create_settings(session)
+            await session.commit()
+            return row.id
+
+    first_id, second_id = await asyncio.gather(_one(), _one())
+    assert first_id == SETTINGS_ROW_ID
+    assert second_id == SETTINGS_ROW_ID
+
+    async with SessionLocal() as session:
+        rows = list((await session.scalars(select(Settings))).all())
+    assert len(rows) == 1
+    assert rows[0].id == SETTINGS_ROW_ID
+
