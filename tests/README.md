@@ -33,6 +33,7 @@ npx playwright test --config=playwright.live.config.ts
 npx playwright test --config=playwright.admin-live.config.ts
 npx playwright test --config=playwright.plans-live.config.ts
 npx playwright test --config=playwright.cutoff-live.config.ts
+npx playwright test --config=playwright.orders-live.config.ts
 ```
 
 JSON-результаты — `tests/results/` (игнорируются Git), скриншоты — `frontend/test-results/`. Для Chromium вместо установленного Edge выполнить `npx playwright install chromium` и убрать `PLAYWRIGHT_CHANNEL`. Демонстрационные пользователи и пароли — в корневом README. Live-сценарии создают тестовых сотрудников/отделы; настройки после проверки восстанавливаются.
@@ -40,6 +41,26 @@ JSON-результаты — `tests/results/` (игнорируются Git), �
 Проверка плана использует каталог из локальной HTML-фикстуры, сохраняет блюдо через UI и проверяет состав/цены после перезагрузки. Исходный состав восстанавливается через API. `sync-from-fixture` не обращается к Mealty.
 
 Проверка cutoff временно задаёт ближайшее время закрытия на изолированном стенде, сохраняет план нового тестового сотрудника и ожидает настоящий переход через границу. Проверяет блокировку уже открытого UI с несохранёнными изменениями и ответ `PUT /api/plans/{date}` → 403. Занимает до двух минут; запускать последовательно с другими live-проверками, поскольку настройки общие. В `finally` восстанавливает настройки и отключает тестового сотрудника; его план остаётся в тестовой базе. Результат — `tests/results/cutoff-results.json`.
+
+Проверка закупок запускается последовательно на desktop/mobile с настоящим API: создаёт двух сотрудников и их планы на свободную будущую дату, раскрывает составы, закрывает приём, скачивает CSV/XLSX и проверяет повторный `place` от другого пользователя. После проверки сотрудники отключены, размещённые заказы остаются в тестовой базе. `sync` и `cutoff` могут обращаться к публичному Mealty; этот отдельный live-конфиг не входит в CI. При 429/502 обновления тест проверяет видимую ошибку и использует сохранённый каталог; результат `sync_http` записан в приложении `observations` JSON-отчёта. Для сценария нужен хотя бы один доступный товар после закрытия. Файлы — `frontend/test-results/live-orders/`, отчёт — `tests/results/orders-results.json`.
+
+Чтобы повторить открытие файлов в установленном Microsoft Excel на Windows, из корня проекта сначала извлечь наблюдения последнего live-прогона:
+
+```powershell
+$run = Get-Content tests/results/orders-results.json -Raw | ConvertFrom-Json
+foreach ($spec in $run.suites.specs) {
+    foreach ($test in $spec.tests) {
+        $folder = Get-ChildItem frontend/test-results/live-orders -Directory | Where-Object Name -Like "*-$($test.projectName)"
+        $attachment = $test.results[-1].attachments | Where-Object name -EQ observations
+        if (-not $attachment.body -or -not $folder) { throw 'Нет успешного live-прогона или выгрузок' }
+        $json = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($attachment.body))
+        [IO.File]::WriteAllText((Join-Path $folder.FullName 'observations.json'), $json, [Text.UTF8Encoding]::new($false))
+        ./tests/check_excel_exports.ps1 -EvidenceDirectory $folder.FullName
+    }
+}
+```
+
+Скрипт создаёт отдельный скрытый экземпляр Excel, открывает XLSX без восстановления и без сохранения, проверяет два листа и значения против API. CSV импортируется как UTF-8 с запятой, независимо от регионального разделителя Windows. Проверяется содержимое ячеек, а не оформление печати; результат — `excel-results.json` рядом с файлами. В API-выгрузке цены остаются целыми копейками согласно контракту, на экране показаны рубли. Без установленного Excel эта проверка недоступна; чтение ZIP/XML в Playwright её не заменяет.
 
 Если нужен web в Docker, запустить `docker compose --env-file tests/.env.test up -d --build web`. Адрес — `http://127.0.0.1:15173`; для Playwright задать этот `PLAYWRIGHT_BASE_URL` вместо 5181.
 

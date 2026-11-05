@@ -48,7 +48,7 @@ test('two employees → cutoff → export → statistics → locked employee pla
     page.getByRole('cell', { name: 'Салат с печёной свёклой', exact: true }),
   ).toHaveCount(0);
   const downloadEvent = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Скачать CSV' }).click();
+  await page.getByRole('button', { name: 'Скачать список для заказа' }).click();
   expect((await downloadEvent).suggestedFilename()).toMatch(/\.csv$/);
   await page
     .getByRole('button', { name: 'Заказ размещён', exact: true })

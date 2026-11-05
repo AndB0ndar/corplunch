@@ -1,1 +1,3 @@
 backend/entrypoint.sh text eol=lf
+# Preserve downloaded CSV evidence, including UTF-8 BOM and CRLF.
+docs/artefacts/tests/qa-evidence/**/order.csv -text whitespace=trailing-space,space-before-tab,cr-at-eol

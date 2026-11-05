@@ -41,8 +41,11 @@ describe('Offline regression scenario', () => {
       items_unavailable: 0,
     });
     expect(await api.order(date)).toEqual(order);
-    await api.place(date);
-    await api.place(date);
+    const placed = await api.place(date);
+    expect(placed.already_placed).toBe(false);
+    await login('admin');
+    expect(await api.place(date)).toEqual({ ...placed, already_placed: true });
+    await api.exportOrder(date, 'xlsx');
     expect((await api.order(date)).status).toBe('placed');
     const stats = await api.stats({ from: date, to: date });
     expect(stats.total_actual_kopecks).toBe(127500);

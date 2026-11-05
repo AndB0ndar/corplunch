@@ -96,6 +96,13 @@ export type CutoffResult = {
   plans_closed: number;
   items_unavailable: number;
 };
+export type PlaceResult = {
+  delivery_date: string;
+  status: 'placed';
+  placed_at: string;
+  placed_by_user_id: number;
+  already_placed: boolean;
+};
 export type Stats = {
   from: string;
   to: string;
@@ -140,7 +147,7 @@ export interface AppApi {
   ): Promise<Plan>;
   order(date: string): Promise<Order>;
   cutoff(date: string): Promise<CutoffResult>;
-  place(date: string): Promise<void>;
+  place(date: string): Promise<PlaceResult>;
   sync(): Promise<void>;
   exportOrder(date: string, format: 'csv' | 'xlsx'): Promise<Blob>;
   stats(filter: StatsFilter): Promise<Stats>;

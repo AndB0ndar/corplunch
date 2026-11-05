@@ -1,0 +1,10 @@
+Повторная проверка 24.10.2026, c071b21 + восстановленные frontend/QA-правки.
+Сводка фактических результатов команд, не полный журнал терминала.
+npm run lint: exit 0.
+npm run format:check: exit 0, All matched files use Prettier code style!
+npm run build: exit 0; TypeScript + Vite, 82 modules transformed.
+npx vitest run: exit 0; 33/33 PASS, unit-results.json.
+npx playwright test --workers=2 --reporter=list,json: exit 0; 18/18 PASS, frontend-results.json.
+npx playwright test --config=playwright.orders-live.config.ts: exit 0; 2/2 PASS, live-results.json.
+pytest tests/test_orders_summary.py tests/test_orders_summary_http.py tests/test_orders_cutoff.py tests/test_export_render.py: exit 0; 22/22 PASS, backend.xml.
+check_excel_exports.ps1: desktop и mobile; XLSX + CSV PASS, Excel 16.0, excel-results.json.

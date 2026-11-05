@@ -1,0 +1,182 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\alexs\\Downloads\\corplunch-main\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config=playwright.orders-live.config.ts"
+    ],
+    "configFile": "C:\\Users\\alexs\\Downloads\\corplunch-main\\frontend\\playwright.orders-live.config.ts",
+    "rootDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/e2e-live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/test-results/live-orders",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop-live",
+        "name": "desktop-live",
+        "testDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/e2e-live",
+        "testIgnore": [],
+        "testMatch": [
+          "orders.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/test-results/live-orders",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile-live",
+        "name": "mobile-live",
+        "testDir": "C:/Users/alexs/Downloads/corplunch-main/frontend/e2e-live",
+        "testIgnore": [],
+        "testMatch": [
+          "orders.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../tests/results/orders-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "orders.spec.ts",
+      "file": "orders.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "two employees, real summary, CSV/XLSX and idempotent place",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-live",
+              "projectName": "desktop-live",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12868,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-24T16:25:04.601Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "observations",
+                      "contentType": "application/json",
+                      "body": "eyJkYXRlIjoiMjAyNi0xMS0yMyIsInN5bmNfaHR0cCI6MjAwLCJzdW1tYXJ5Ijp7ImRlbGl2ZXJ5X2RhdGUiOiIyMDI2LTExLTIzIiwic3RhdHVzIjoibG9ja2VkIiwidG90YWxzIjp7InBsYW5uZWRfa29wZWNrcyI6MTE3MDAwLCJhY3R1YWxfa29wZWNrcyI6MTE3MDAwLCJkZWx0YV9rb3BlY2tzIjowLCJ1bmF2YWlsYWJsZV9jb3VudCI6MH0sIml0ZW1zIjpbeyJkaXNoX2lkIjo3LCJleHRlcm5hbF9pZCI6Ijg4OCIsIm5hbWUiOiLQkdGR0YQg0LHRg9GA0LPQuNC90YzQvtC9IiwicXR5IjozLCJ1bml0X3ByaWNlX2tvcGVja3MiOjM5MDAwLCJsaW5lX3RvdGFsX2tvcGVja3MiOjExNzAwMH1dLCJieV9lbXBsb3llZSI6W3sidXNlcl9pZCI6MTksImZ1bGxfbmFtZSI6IlFBINCX0LDQutGD0L/QutC4IDEgMTc5Mjg1OTExMzg4OCIsImRlcGFydG1lbnRfaWQiOm51bGwsImRlcGFydG1lbnRfbmFtZSI6bnVsbCwiYWN0dWFsX3RvdGFsX2tvcGVja3MiOjc4MDAwLCJ1bmF2YWlsYWJsZV9jb3VudCI6MH0seyJ1c2VyX2lkIjoyMCwiZnVsbF9uYW1lIjoiUUEg0JfQsNC60YPQv9C60LggMiAxNzkyODU5MTEzODg4IiwiZGVwYXJ0bWVudF9pZCI6bnVsbCwiZGVwYXJ0bWVudF9uYW1lIjpudWxsLCJhY3R1YWxfdG90YWxfa29wZWNrcyI6MzkwMDAsInVuYXZhaWxhYmxlX2NvdW50IjowfV19LCJmaXJzdF9wbGFjZSI6eyJkZWxpdmVyeV9kYXRlIjoiMjAyNi0xMS0yMyIsInN0YXR1cyI6InBsYWNlZCIsInBsYWNlZF9hdCI6IjIwMjYtMTAtMjRUMTY6MjU6MTguMDkxNDIwWiIsInBsYWNlZF9ieV91c2VyX2lkIjo0LCJhbHJlYWR5X3BsYWNlZCI6ZmFsc2V9LCJyZXBlYXRlZF9wbGFjZSI6dHJ1ZSwiZXhwb3J0X2FmdGVyX3BsYWNlZCI6dHJ1ZX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "de3f15501f825e0a6f88-46f30a06eb912286933f",
+          "file": "orders.spec.ts",
+          "line": 9,
+          "column": 1
+        },
+        {
+          "title": "two employees, real summary, CSV/XLSX and idempotent place",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile-live",
+              "projectName": "mobile-live",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8648,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-24T16:25:19.437Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "observations",
+                      "contentType": "application/json",
+                      "body": "eyJkYXRlIjoiMjAyNi0xMS0yNCIsInN5bmNfaHR0cCI6NDI5LCJzdW1tYXJ5Ijp7ImRlbGl2ZXJ5X2RhdGUiOiIyMDI2LTExLTI0Iiwic3RhdHVzIjoibG9ja2VkIiwidG90YWxzIjp7InBsYW5uZWRfa29wZWNrcyI6MTE3MDAwLCJhY3R1YWxfa29wZWNrcyI6MTE3MDAwLCJkZWx0YV9rb3BlY2tzIjowLCJ1bmF2YWlsYWJsZV9jb3VudCI6MH0sIml0ZW1zIjpbeyJkaXNoX2lkIjo3LCJleHRlcm5hbF9pZCI6Ijg4OCIsIm5hbWUiOiLQkdGR0YQg0LHRg9GA0LPQuNC90YzQvtC9IiwicXR5IjozLCJ1bml0X3ByaWNlX2tvcGVja3MiOjM5MDAwLCJsaW5lX3RvdGFsX2tvcGVja3MiOjExNzAwMH1dLCJieV9lbXBsb3llZSI6W3sidXNlcl9pZCI6MjEsImZ1bGxfbmFtZSI6IlFBINCX0LDQutGD0L/QutC4IDEgMTc5Mjg1OTEyMjk4OSIsImRlcGFydG1lbnRfaWQiOm51bGwsImRlcGFydG1lbnRfbmFtZSI6bnVsbCwiYWN0dWFsX3RvdGFsX2tvcGVja3MiOjc4MDAwLCJ1bmF2YWlsYWJsZV9jb3VudCI6MH0seyJ1c2VyX2lkIjoyMiwiZnVsbF9uYW1lIjoiUUEg0JfQsNC60YPQv9C60LggMiAxNzkyODU5MTIyOTg5IiwiZGVwYXJ0bWVudF9pZCI6bnVsbCwiZGVwYXJ0bWVudF9uYW1lIjpudWxsLCJhY3R1YWxfdG90YWxfa29wZWNrcyI6MzkwMDAsInVuYXZhaWxhYmxlX2NvdW50IjowfV19LCJmaXJzdF9wbGFjZSI6eyJkZWxpdmVyeV9kYXRlIjoiMjAyNi0xMS0yNCIsInN0YXR1cyI6InBsYWNlZCIsInBsYWNlZF9hdCI6IjIwMjYtMTAtMjRUMTY6MjU6MjcuODQ2NzMyWiIsInBsYWNlZF9ieV91c2VyX2lkIjo0LCJhbHJlYWR5X3BsYWNlZCI6ZmFsc2V9LCJyZXBlYXRlZF9wbGFjZSI6dHJ1ZSwiZXhwb3J0X2FmdGVyX3BsYWNlZCI6dHJ1ZX0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "de3f15501f825e0a6f88-f985cda313747af367c2",
+          "file": "orders.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-24T16:25:03.598Z",
+    "duration": 25312.486,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

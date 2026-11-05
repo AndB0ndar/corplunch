@@ -18,7 +18,10 @@ type State = {
   settings: Settings;
   dishes: Dish[];
   plans: Record<string, Plan>;
-  orders: Record<string, Order>;
+  orders: Record<
+    string,
+    Order & { placed_at?: string; placed_by_user_id?: number }
+  >;
   syncDay: string;
   syncCount: number;
 };
@@ -333,8 +336,18 @@ export const demoApi: AppApi = {
     authorize();
     const order = state.orders[date];
     if (!order) return fail(403, 'Сначала закройте приём заказов.');
+    const already_placed = order.status === 'placed';
+    order.placed_at ??= new Date().toISOString();
+    order.placed_by_user_id ??= current().id;
     order.status = 'placed';
     persist();
+    return {
+      delivery_date: date,
+      status: 'placed',
+      placed_at: order.placed_at,
+      placed_by_user_id: order.placed_by_user_id,
+      already_placed,
+    };
   },
   async sync() {
     authorize();

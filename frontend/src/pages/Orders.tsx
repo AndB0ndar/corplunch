@@ -10,6 +10,7 @@ import {
 } from '../components';
 import { download, money, shiftDate, today } from '../format';
 import { useSession } from '../session';
+import type { Order } from '../types';
 
 const statuses = {
   collecting: 'Собираем планы',
@@ -26,6 +27,7 @@ export function Orders() {
   const query = useQuery({
     queryKey: ['order', date],
     queryFn: () => api.order(date),
+    refetchInterval: 10000,
   });
   const action = useAction(
     async (kind: 'sync' | 'cutoff' | 'place' | 'csv' | 'xlsx') => {
@@ -45,8 +47,12 @@ export function Orders() {
               : 'Приём закрыт. Цены и наличие уточнены.',
         );
       } else if (kind === 'place') {
-        await api.place(date);
-        setMessage('Заказ отмечен как размещённый.');
+        const result = await api.place(date);
+        setMessage(
+          result.already_placed
+            ? 'Заказ уже размещён. Состав и сумма не изменились.'
+            : 'Заказ отмечен как размещённый.',
+        );
       } else {
         download(
           await api.exportOrder(date, kind),
@@ -116,7 +122,7 @@ export function Orders() {
                     disabled={action.isPending}
                     onClick={() => action.mutate('csv')}
                   >
-                    ↓ Скачать CSV
+                    ↓ Скачать список для заказа
                   </button>
                   <button
                     disabled={action.isPending}
@@ -220,8 +226,9 @@ export function Orders() {
                 </div>
               ) : (
                 <Empty>
-                  Пока нет блюд для закупки. Сотрудникам нужно сохранить планы
-                  на эту дату.
+                  {order.status === 'collecting'
+                    ? 'Пока нет блюд для закупки. Сотрудникам нужно сохранить планы на эту дату.'
+                    : 'Нет доступных блюд для закупки. Снятые позиции показаны в планах сотрудников.'}
                 </Empty>
               )}
             </section>
@@ -232,27 +239,15 @@ export function Orders() {
                   {order.by_employee.length} человек
                 </span>
               </div>
+              {order.by_employee.length === 0 && (
+                <Empty>На эту дату ещё нет планов сотрудников.</Empty>
+              )}
               {order.by_employee.map((person) => (
-                <details className="employee-row" key={person.user_id}>
-                  <summary>
-                    <span>
-                      <b>{person.full_name}</b>
-                      <small>
-                        {person.department_name ?? 'Без отдела'}
-                        {person.unavailable_count > 0
-                          ? ` · нет в меню: ${person.unavailable_count}`
-                          : ''}
-                      </small>
-                    </span>
-                    <strong>
-                      {person.actual_total_kopecks === null
-                        ? '—'
-                        : money(person.actual_total_kopecks)}{' '}
-                      <span className="muted">⌄</span>
-                    </strong>
-                  </summary>
-                  <EmployeePlan date={date} userId={person.user_id} />
-                </details>
+                <EmployeeSummary
+                  key={`${date}:${person.user_id}`}
+                  date={date}
+                  person={person}
+                />
               ))}
             </section>
             <p className="muted">
@@ -264,6 +259,40 @@ export function Orders() {
         )
       )}
     </>
+  );
+}
+function EmployeeSummary({
+  date,
+  person,
+}: {
+  date: string;
+  person: Order['by_employee'][number];
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details
+      className="employee-row"
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>
+        <span>
+          <b>{person.full_name}</b>
+          <small>
+            {person.department_name ?? 'Без отдела'}
+            {person.unavailable_count > 0
+              ? ` · нет в меню: ${person.unavailable_count}`
+              : ''}
+          </small>
+        </span>
+        <strong>
+          {person.actual_total_kopecks === null
+            ? '—'
+            : money(person.actual_total_kopecks)}{' '}
+          <span className="muted">⌄</span>
+        </strong>
+      </summary>
+      {open && <EmployeePlan date={date} userId={person.user_id} />}
+    </details>
   );
 }
 function EmployeePlan({ date, userId }: { date: string; userId: number }) {

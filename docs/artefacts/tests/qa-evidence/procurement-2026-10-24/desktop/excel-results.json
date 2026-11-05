@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-10-24T16:26:30.7394724Z",
+  "excel_version": "16.0",
+  "delivery_date": "2026-11-23",
+  "result": "PASS",
+  "checks": [
+    {
+      "format": "xlsx",
+      "opening": "normal read-only, no repair",
+      "dish_rows": 1,
+      "total_kopecks": 117000.0,
+      "cyrillic_and_numeric_cells": "PASS"
+    },
+    {
+      "format": "csv",
+      "opening": "UTF-8 comma import",
+      "dish_rows": 1,
+      "total_kopecks": 117000.0,
+      "cyrillic_and_numeric_cells": "PASS"
+    }
+  ]
+}
