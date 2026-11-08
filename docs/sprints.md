@@ -335,11 +335,11 @@ gantt
 
 ### Бондарь
 
-- [ ] `GET /api/stats/summary`
+- [x] `GET /api/stats/summary`
   - Query: `from`, `to` (обязательны), `department_id?`. Доступ: закупки/админ.
   - Поля: итоги план/факт/дельта, `unavailable_count`, `by_department`, `by_employee`, `top_dishes`, `price_changes` — как в [api.md](api.md). Копейки, не float.
 
-- [ ] **Pytest статистики**
+- [x] **Pytest статистики**
   - `GET /api/stats/summary`: копейки, фильтр `department_id`, доступ закупок и админа.
   - Приёмка по [demo.md](demo.md) этот тест не заменяет.
 
