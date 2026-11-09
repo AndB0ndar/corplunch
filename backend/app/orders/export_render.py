@@ -1,7 +1,8 @@
 """Render office-order summary DTO to CSV / XLSX (no DB, no status changes).
 
-The export router calls these helpers on a live summary DTO, then flips
-`locked → exported`. This module only formats bytes.
+The export router / `build_export` feeds these helpers a **live** summary DTO
+(`OrderSummary` from Bondar's aggregate), then flips `locked → exported`.
+This module only formats bytes.
 """
 
 from __future__ import annotations
@@ -12,6 +13,8 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from openpyxl import Workbook
+
+from app.orders.schemas import OrderSummary
 
 CSV_COLUMNS = (
     "external_id",
@@ -44,6 +47,21 @@ def _by_employee(summary: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]:
     if not isinstance(rows, Sequence) or isinstance(rows, (str, bytes)):
         raise TypeError("summary['by_employee'] must be a sequence of row mappings")
     return rows  # type: ignore[return-value]
+
+
+def summary_payload(summary: OrderSummary) -> dict[str, Any]:
+    """Bondar's live `OrderSummary` → JSON-shaped mapping for the renderers."""
+    return summary.model_dump(mode="json")
+
+
+def render_order_summary_csv(summary: OrderSummary) -> bytes:
+    """Live aggregate DTO → UTF-8 CSV (columns from docs/api.md)."""
+    return render_summary_csv(summary_payload(summary))
+
+
+def render_order_summary_xlsx(summary: OrderSummary) -> bytes:
+    """Live aggregate DTO → XLSX (dish sheet + «По сотрудникам»)."""
+    return render_summary_xlsx(summary_payload(summary))
 
 
 def render_summary_csv(summary: Mapping[str, Any]) -> bytes:

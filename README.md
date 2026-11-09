@@ -97,3 +97,15 @@ docker compose exec api python -m app.cli sync-from-fixture
 В плане сотрудник видит **последнюю известную** цену из снимка каталога (`price_kopecks`). В день заказа (после cutoff) система синхронизирует Mealty, пишет `actual_price_kopecks` и помечает исчезнувшие блюда как `unavailable`. В сводку закупок входят только доступные позиции.
 
 Cutoff по умолчанию: **16:00 предыдущего дня** (настраивается).
+
+## Как перенести заказ на Mealty
+
+CorpLunch **не** оформляет корзину на mealty.ru и не логинится под аккаунтом офиса. Закупки переносят сводку руками:
+
+1. После cutoff откройте сводку дня (роль закупки) и скачайте **CSV** или **XLSX** (`GET /api/orders/{date}/export.csv` / `export.xlsx`).
+2. Колонки файла: `external_id`, `name`, `qty`, `unit_price_kopecks`, `line_total_kopecks`. В Excel удобнее XLSX (лист «Блюда» + «По сотрудникам»); CSV открывается с UTF-8 BOM.
+3. На [mealty.ru](https://www.mealty.ru) найдите каждое блюдо по `external_id` / названию и выставьте количество `qty` в своей корзине / кабинете офиса.
+4. Оформите и оплатите заказ **на сайте Mealty** своими обычными средствами.
+5. Вернитесь в CorpLunch и нажмите «Заказ размещён» (`POST /api/orders/{date}/place`), чтобы день зафиксировался как `placed`.
+
+Автоматизации корзины, обхода login/ajax и ботов нет и не планируется — см. [docs/mealty.md](docs/mealty.md) и сценарий защиты в [docs/demo.md](docs/demo.md).
