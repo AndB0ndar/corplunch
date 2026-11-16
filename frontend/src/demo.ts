@@ -1,5 +1,6 @@
 // Browser-only teaching data. Never used as a fallback for a failed HTTP request.
 import { ApiError } from './api';
+import { demoStats } from './demoStats';
 import { shiftDate, today } from './format';
 import type {
   AppApi,
@@ -8,7 +9,6 @@ import type {
   Order,
   Plan,
   Settings,
-  Stats,
   User,
 } from './types';
 
@@ -372,92 +372,8 @@ export const demoApi: AppApi = {
   },
   async stats(filter) {
     authorize();
-    const result: Stats = {
-      ...filter,
-      total_planned_kopecks: 0,
-      total_actual_kopecks: 0,
-      delta_kopecks: 0,
-      unavailable_count: 0,
-      by_department: [],
-      by_employee: [],
-      top_dishes: [],
-      price_changes: [],
-    };
-    for (const plan of Object.values(state.plans).filter(
-      (p) =>
-        p.status !== 'draft' &&
-        p.delivery_date >= filter.from &&
-        p.delivery_date <= filter.to,
-    )) {
-      const user = state.users.find((u) => u.id === plan.user_id)!;
-      if (
-        filter.department_id !== undefined &&
-        user.department?.id !== filter.department_id
-      )
-        continue;
-      result.total_planned_kopecks += plan.planned_total_kopecks;
-      result.total_actual_kopecks += plan.actual_total_kopecks ?? 0;
-      if (user.department) {
-        let row = result.by_department.find(
-          (d) => d.department_id === user.department!.id,
-        );
-        if (!row) {
-          row = {
-            department_id: user.department.id,
-            name: user.department.name,
-            actual_kopecks: 0,
-            order_count: 0,
-          };
-          result.by_department.push(row);
-        }
-        row.actual_kopecks += plan.actual_total_kopecks ?? 0;
-        row.order_count++;
-      }
-      let person = result.by_employee.find((u) => u.user_id === user.id);
-      if (!person) {
-        person = {
-          user_id: user.id,
-          full_name: user.full_name,
-          actual_kopecks: 0,
-          order_count: 0,
-        };
-        result.by_employee.push(person);
-      }
-      person.actual_kopecks += plan.actual_total_kopecks ?? 0;
-      person.order_count++;
-      for (const item of plan.items) {
-        if (item.unavailable) {
-          result.unavailable_count++;
-          continue;
-        }
-        let dish = result.top_dishes.find((d) => d.dish_id === item.dish_id);
-        if (!dish) {
-          dish = {
-            dish_id: item.dish_id,
-            name: item.name,
-            qty: 0,
-            actual_kopecks: 0,
-          };
-          result.top_dishes.push(dish);
-        }
-        dish.qty += item.qty;
-        dish.actual_kopecks += (item.actual_price_kopecks ?? 0) * item.qty;
-        if (
-          item.actual_price_kopecks !== null &&
-          item.actual_price_kopecks !== item.planned_price_kopecks
-        )
-          result.price_changes.push({
-            dish_id: item.dish_id,
-            name: item.name,
-            planned_price_kopecks: item.planned_price_kopecks,
-            actual_price_kopecks: item.actual_price_kopecks,
-          });
-      }
-    }
-    result.delta_kopecks =
-      result.total_actual_kopecks - result.total_planned_kopecks;
-    result.top_dishes.sort((a, b) => b.qty - a.qty);
-    return result;
+    if (filter.from > filter.to) fail(422, 'from is later than to');
+    return demoStats(Object.values(state.plans), state.users, filter);
   },
   async departments() {
     authorize(true);

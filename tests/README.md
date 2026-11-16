@@ -64,6 +64,31 @@ foreach ($spec in $run.suites.specs) {
 
 Если нужен web в Docker, запустить `docker compose --env-file tests/.env.test up -d --build web`. Адрес — `http://127.0.0.1:15173`; для Playwright задать этот `PLAYWRIGHT_BASE_URL` вместо 5181.
 
+## Статистика: настоящий API без Mealty
+
+После запуска тестового `db api` и `seed-users` подготовить фиксированные данные (из корня проекта):
+
+```powershell
+docker compose --env-file tests/.env.test cp tests/seed_stats.py api:/app/seed_stats_qa.py
+if ($LASTEXITCODE -ne 0) { throw 'Не удалось скопировать фикстуру' }
+$statsSeed = docker compose --env-file tests/.env.test exec -T api python /app/seed_stats_qa.py
+if ($LASTEXITCODE -ne 0) { throw 'Не удалось подготовить данные статистики' }
+New-Item -ItemType Directory -Force tests/results | Out-Null
+[IO.File]::WriteAllText((Join-Path (Get-Location) 'tests/results/stats-seed.json'), ($statsSeed -join "`n"), [Text.UTF8Encoding]::new($false))
+```
+
+Затем в терминале frontend с `PLAYWRIGHT_BASE_URL`, направленным на Vite с тестовым API:
+
+```powershell
+npx playwright test --config=playwright.stats-live.config.ts
+```
+
+Сценарий запускается в Edge/Chromium на desktop и mobile. Проверяет настоящие HTTP-ответы статистики, четыре роли/учётки и анонимный доступ, период включительно, отдел, пустые выборки, 422, итог и дельту, отсутствие снятого блюда в суммах, уникальность изменений цен, таблицы и фильтры UI. Результат — `tests/results/stats-results.json`, скриншоты — `frontend/test-results/live-stats/`. JWT не сохраняются в доказательствах; trace выключен.
+
+Фикстура через ORM создаёт в изолированной базе новые отделы, трёх неактивных сотрудников без рабочего пароля, блюда и планы с фиксированными историческими ценами. Выбирает свободный диапазон начиная с января 2040 года; повторный запуск использует следующий свободный диапазон и обновляет manifest. Существующие записи не удаляет. Тестовые блюда неактивны в каталоге. Данные остаются в тестовой базе. Скрипт проверяет учебное окружение `tests/.env.test`; не запускать его в общей базе.
+
+HTTP не подменяется, но исходные статусы, цены и `unavailable` задаются фикстурой: этот сценарий проверяет чтение статистики, а не работу парсера или cutoff. Переход cutoff → сводка → статистика отдельно проверяет серверный `test_closed_day_matches_order_totals_and_repeat_is_readonly` в `backend/tests/test_stats_summary.py`.
+
 ## Серверные проверки
 
 Тесты исключены из runtime-образа. Для запуска в тестовом контейнере скопировать содержимое каталога, включая точку после `tests/`, чтобы не создать вложенный `tests/tests`:

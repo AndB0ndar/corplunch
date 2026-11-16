@@ -104,24 +104,34 @@ export function Statistics() {
                           <h2>Расходы по отделам</h2>
                           <span className="muted">Фактические</span>
                         </div>
-                        {stats.by_department.map((d) => (
-                          <div className="bar-row" key={d.department_id}>
-                            <div>
-                              <span>{d.name}</span>
-                              <b>{money(d.actual_kopecks)}</b>
-                            </div>
-                            <div className="bar-track">
-                              <div
-                                style={{
-                                  width: `${stats.total_actual_kopecks ? (d.actual_kopecks / stats.total_actual_kopecks) * 100 : 0}%`,
-                                }}
-                              />
-                            </div>
-                            <small className="muted">
-                              Планов сотрудников: {d.order_count}
-                            </small>
+                        {stats.by_department.length ? (
+                          <div className="table-scroll">
+                            <table aria-label="Расходы по отделам">
+                              <thead>
+                                <tr>
+                                  <th>Отдел</th>
+                                  <th className="numeric">Планов</th>
+                                  <th className="numeric">Фактическая сумма</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {stats.by_department.map((d) => (
+                                  <tr key={d.department_id}>
+                                    <td>{d.name}</td>
+                                    <td className="numeric">{d.order_count}</td>
+                                    <td className="numeric">
+                                      {money(d.actual_kopecks)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
-                        ))}
+                        ) : (
+                          <p className="muted">
+                            У сотрудников в этом периоде не указан отдел.
+                          </p>
+                        )}
                       </section>
                       <section className="panel">
                         <div className="section-heading">
