@@ -49,6 +49,12 @@ describe('Offline regression scenario', () => {
     expect((await api.order(date)).status).toBe('placed');
     const stats = await api.stats({ from: date, to: date });
     expect(stats.total_actual_kopecks).toBe(127500);
+    expect(stats.total_planned_kopecks).toBe(123000);
+    expect(stats.delta_kopecks).toBe(4500);
+    expect(stats.price_changes).toHaveLength(1);
+    await expect(api.stats({ from: date, to: today() })).rejects.toMatchObject({
+      status: 422,
+    });
     await login('employee');
     expect((await api.plan(date)).editable).toBe(false);
     await expect(api.savePlan(date, [])).rejects.toMatchObject({ status: 403 });

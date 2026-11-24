@@ -558,25 +558,6 @@
   grid-template-columns: 1fr 1fr;
   gap: 22px;
 }
-.bar-row {
-  margin: 26px 0;
-}
-.bar-row > div:first-child {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-}
-.bar-track {
-  height: 10px;
-  background: #eef0e7;
-  border-radius: 3px;
-  overflow: hidden;
-  margin: 10px 0 6px;
-}
-.bar-track > div {
-  height: 100%;
-  background: #718765;
-}
 .ranking {
   display: flex;
   gap: 14px;

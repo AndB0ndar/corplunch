@@ -17,7 +17,10 @@ from sqlalchemy.orm import selectinload
 
 from app.catalog.models import Dish
 from app.catalog.service import EmptySnapshotError, sync_live_catalog
-from app.orders.export_render import render_summary_csv, render_summary_xlsx
+from app.orders.export_render import (
+    render_order_summary_csv,
+    render_order_summary_xlsx,
+)
 from app.orders.models import OfficeOrder, OfficeOrderItem, OfficeOrderStatus
 from app.orders.schemas import (
     EmployeeRowOut,
@@ -338,13 +341,12 @@ async def build_export(
         raise DayStillCollecting(DAY_STILL_COLLECTING_DETAIL)
 
     summary = await build_order_summary(session, delivery_date)
-    payload = summary.model_dump(mode="json")
     if kind == "csv":
-        body = render_summary_csv(payload)
+        body = render_order_summary_csv(summary)
         media_type = CSV_MEDIA_TYPE
         extension = "csv"
     elif kind == "xlsx":
-        body = render_summary_xlsx(payload)
+        body = render_order_summary_xlsx(summary)
         media_type = XLSX_MEDIA_TYPE
         extension = "xlsx"
     else:

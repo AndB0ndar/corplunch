@@ -40,7 +40,7 @@
 | [docs/ui.md](docs/ui.md) | Черновик экранов и тон интерфейса |
 | [docs/demo.md](docs/demo.md) | Сценарий защиты / демо |
 
-В репозитории есть backend с авторизацией, профилем пользователя, управлением пользователями и отделами, парсером Mealty и frontend всех MVP-экранов с отдельным деморежимом. Полный бизнес-API ещё предстоит реализовать. Запуск интерфейса без сервера: [docs/frontend.md](docs/frontend.md); чек-листы и регресс: [docs/qa.md](docs/qa.md).
+В репозитории — backend с авторизацией, admin API, каталогом Mealty, планами, сводкой заказов, экспортом CSV/XLSX и статистикой, плюс frontend всех MVP-экранов (есть и деморежим без сервера). Запуск интерфейса отдельно: [docs/frontend.md](docs/frontend.md); чек-листы и регресс: [docs/qa.md](docs/qa.md).
 
 ## Роли в системе
 
@@ -48,7 +48,7 @@
 - **procurement** — сводка на дату, закрытие приёма, CSV/XLSX, отметка «заказ размещён», статистика.
 - **admin** — пользователи, отделы, cutoff, город Mealty, дневной лимит.
 
-Демо-пользователи (после реализации seed):
+Демо-пользователи (`seed-users`):
 
 | Email | Пароль | Роль |
 |-------|--------|------|
@@ -57,7 +57,7 @@
 | `procurement@kis.local` | `procurement` | закупки |
 | `admin@kis.local` | `admin` | администратор |
 
-## Как будем запускать (после реализации)
+## Как запустить
 
 ```bash
 docker compose up --build
@@ -68,15 +68,15 @@ docker compose up --build
 
 Один `docker compose up` поднимает PostgreSQL, backend и frontend. Backend — один FastAPI с внутренними модулями.
 
-Команды seed (появятся на этапах 0–1, точные имена в CLI):
+После первого `docker compose up` наполните БД демо-данными:
 
 ```bash
 docker compose exec api python -m app.cli seed-users
 docker compose exec api python -m app.cli sync-from-fixture
 ```
 
-- `seed-users` — отделы и демо-учётки, включая двух сотрудников (этап 0).
-- `sync-from-fixture` — каталог из `backend/tests/fixtures/mealty_catalog.html`, без запроса на mealty.ru (этап 1). Для демо без живого сайта.
+- `seed-users` — отделы «Разработка», «Закупки», «Администрация» и четыре демо-учётки, в том числе **два сотрудника** (`employee@kis.local`, `employee2@kis.local`).
+- `sync-from-fixture` — каталог из `backend/tests/fixtures/mealty_catalog.html`, без HTTP к mealty.ru. Так поднимают демо и защиту без живого сайта.
 
 Цены в API и БД — целые **копейки** (`*_kopecks`); UI делит на 100 и показывает ₽. Авторизация — только `Authorization: Bearer <jwt>`, без cookie.
 
@@ -97,3 +97,15 @@ docker compose exec api python -m app.cli sync-from-fixture
 В плане сотрудник видит **последнюю известную** цену из снимка каталога (`price_kopecks`). В день заказа (после cutoff) система синхронизирует Mealty, пишет `actual_price_kopecks` и помечает исчезнувшие блюда как `unavailable`. В сводку закупок входят только доступные позиции.
 
 Cutoff по умолчанию: **16:00 предыдущего дня** (настраивается).
+
+## Как перенести заказ на Mealty
+
+CorpLunch **не** оформляет корзину на mealty.ru и не логинится под аккаунтом офиса. Закупки переносят сводку руками:
+
+1. После cutoff откройте сводку дня (роль закупки) и скачайте **CSV** или **XLSX** (`GET /api/orders/{date}/export.csv` / `export.xlsx`).
+2. Колонки файла: `external_id`, `name`, `qty`, `unit_price_kopecks`, `line_total_kopecks`. В Excel удобнее XLSX (лист «Блюда» + «По сотрудникам»); CSV открывается с UTF-8 BOM.
+3. На [mealty.ru](https://www.mealty.ru) найдите каждое блюдо по `external_id` / названию и выставьте количество `qty` в своей корзине / кабинете офиса.
+4. Оформите и оплатите заказ **на сайте Mealty** своими обычными средствами.
+5. Вернитесь в CorpLunch и нажмите «Заказ размещён» (`POST /api/orders/{date}/place`), чтобы день зафиксировался как `placed`.
+
+Автоматизации корзины, обхода login/ajax и ботов нет и не планируется — см. [docs/mealty.md](docs/mealty.md) и сценарий защиты в [docs/demo.md](docs/demo.md).
