@@ -17,11 +17,9 @@ test('two employees → cutoff → export → statistics → locked employee pla
 }) => {
   await page.goto('/');
   await enter(page, 'Сотрудник');
-  const gnocchi = page
-    .getByRole('article')
-    .filter({
-      has: page.getByRole('heading', { name: 'Картофельные ньокки' }),
-    });
+  const gnocchi = page.getByRole('article').filter({
+    has: page.getByRole('heading', { name: 'Картофельные ньокки' }),
+  });
   await gnocchi.getByText('Состав и КБЖУ').click();
   await expect(gnocchi).toContainText('Баранина, баклажаны');
   await expect(gnocchi).toContainText('120 ккал / 100 г');
