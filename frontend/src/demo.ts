@@ -1,5 +1,6 @@
 // Browser-only teaching data. Never used as a fallback for a failed HTTP request.
 import { ApiError } from './api';
+import { demoCatalog } from './demoCatalog';
 import { demoStats } from './demoStats';
 import { shiftDate, today } from './format';
 import type {
@@ -44,47 +45,6 @@ function initialState(): State {
     'Мария Петрова',
     'Администратор',
   ];
-  const dishes: Dish[] = [
-    [
-      'Картофельные ньокки',
-      'с грибами и сливочным соусом',
-      'main_dish',
-      41000,
-      300,
-    ],
-    ['Куриная грудка', 'с булгуром и овощами', 'main_dish', 39000, 280],
-    ['Тыквенный суп', 'со сливками и семечками', 'soup', 24000, 300],
-    ['Салат с печёной свёклой', 'сыром и свежей зеленью', 'salad', 29000, 180],
-    ['Сырники', 'со сметаной и ягодным соусом', 'breakfast', 26000, 180],
-    [
-      'Чиабатта с индейкой',
-      'с моцареллой и сладким перцем',
-      'sandwich',
-      32000,
-      250,
-    ],
-    ['Морковный торт', 'с нежным сливочным кремом', 'dessert', 22000, 130],
-    ['Морс из клюквы', 'освежающий, с лёгкой кислинкой', 'drink', 12000, 300],
-  ].map((row, i) => ({
-    id: i + 1,
-    source: 'mealty',
-    external_id: String(875 + i),
-    seller_product_id: null,
-    name: String(row[0]),
-    subtitle: String(row[1]),
-    category: String(row[2]),
-    price_kopecks: Number(row[3]),
-    weight_g: Number(row[4]),
-    old_price_kopecks: i === 0 ? 45000 : null,
-    description:
-      'Учебная карточка для проверки интерфейса. Состав уточняется в каталоге поставщика.',
-    proteins: 12,
-    fats: 9,
-    carbs: 24,
-    calories: 225,
-    image_url: null,
-    available: true,
-  }));
   return {
     departments,
     users: demoAccounts.map((account, i) => ({
@@ -103,7 +63,7 @@ function initialState(): State {
       daily_limit_kopecks: null,
       catalog_sync_per_day: 2,
     },
-    dishes,
+    dishes: structuredClone(demoCatalog),
     plans: {},
     orders: {},
     syncDay: today(),
@@ -113,7 +73,23 @@ function initialState(): State {
 function load(): State {
   try {
     const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw) as State;
+    if (raw) {
+      const saved = JSON.parse(raw) as State;
+      // Refresh catalog labels in existing sessions, keeping the simulated price
+      // changes and delistings that belong to this user's demo.
+      saved.dishes = demoCatalog.map((dish) => {
+        const previous = saved.dishes.find((item) => item.id === dish.id);
+        return {
+          ...dish,
+          price_kopecks: previous?.price_kopecks ?? dish.price_kopecks,
+          old_price_kopecks: previous
+            ? previous.old_price_kopecks
+            : dish.old_price_kopecks,
+          available: previous?.available ?? dish.available,
+        };
+      });
+      return saved;
+    }
   } catch {
     /* Fresh demo after damaged browser storage. */
   }

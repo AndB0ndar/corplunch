@@ -198,7 +198,13 @@ test('period statistics: sums, departments, exclusions, roles and responsive tab
   await expect(page.getByText('QA Снятое блюдо', { exact: true })).toHaveCount(
     0,
   );
-  await expect(page.locator('.bar-track')).toHaveCount(0);
+  const days = page
+    .getByRole('region', { name: 'Расходы по дням' })
+    .getByRole('listitem');
+  await expect(days).toHaveCount(3);
+  await expect(days.nth(0)).toContainText(money(112000));
+  await expect(days.nth(1)).toContainText(money(96500));
+  await expect(days.nth(2)).toContainText(money(0));
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -217,6 +223,8 @@ test('period statistics: sums, departments, exclusions, roles and responsive tab
     page.getByRole('cell', { name: seed.users[1].name, exact: true }),
   ).toHaveCount(0);
   await expect(page.locator('.metrics')).toContainText(money(123000));
+  await expect(days.nth(0)).toContainText(money(85000));
+  await expect(days.nth(1)).toContainText(money(42500));
   await page.getByLabel('С', { exact: true }).fill(seed.second_day);
   await expect(
     page.getByRole('combobox', { name: 'Отдел', exact: true }),

@@ -10,13 +10,7 @@ import {
   today,
 } from '../format';
 import { PLAN_CLOSED_MESSAGE } from '../api';
-import {
-  DatePicker,
-  Empty,
-  ErrorNotice,
-  FoodArt,
-  Loading,
-} from '../components';
+import { DatePicker, Empty, ErrorNotice, Loading } from '../components';
 import { useSession } from '../session';
 import type { Dish, Plan, PlanItem } from '../types';
 
@@ -174,6 +168,30 @@ const EditorContext = createContext<{
   editable: boolean;
   items: PlanItem[];
 } | null>(null);
+const catalogPhotos = import.meta.glob<string>('../assets/mealty/*.jpeg', {
+  eager: true,
+  import: 'default',
+  query: '?url',
+});
+
+function DishPhoto({ dish }: { dish: Dish }) {
+  const localPhoto =
+    dish.source === 'mealty'
+      ? catalogPhotos[`../assets/mealty/${dish.external_id}.jpeg`]
+      : undefined;
+  const [src, setSrc] = useState(dish.image_url || localPhoto);
+  return src ? (
+    <img
+      src={src}
+      alt={dish.name}
+      loading="lazy"
+      onError={() => setSrc(src === localPhoto ? undefined : localPhoto)}
+    />
+  ) : (
+    <span className="dish-photo-missing">Фото пока нет</span>
+  );
+}
+
 function CatalogCards({ dishes }: { dishes: Dish[] }) {
   const editor = useContext(EditorContext)!;
   return dishes.length ? (
@@ -184,18 +202,14 @@ function CatalogCards({ dishes }: { dishes: Dish[] }) {
           key={dish.id}
         >
           <div className={`dish-picture tone-${dish.id % 4}`}>
-            {dish.image_url ? (
-              <img
-                src={dish.image_url}
-                alt={dish.name}
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            ) : (
-              <FoodArt category={dish.category} id={dish.id} />
-            )}
+            <DishPhoto
+              key={JSON.stringify([
+                dish.source,
+                dish.external_id,
+                dish.image_url,
+              ])}
+              dish={dish}
+            />
             <span className="dish-category">
               {categories[dish.category] ?? dish.category}
             </span>
@@ -205,14 +219,22 @@ function CatalogCards({ dishes }: { dishes: Dish[] }) {
             <p>{dish.subtitle}</p>
             <div className="nutrition">
               {dish.weight_g !== null && <span>{dish.weight_g} г</span>}
-              {dish.calories !== null && <span>{dish.calories} ккал</span>}
+              {dish.volume_ml != null && <span>{dish.volume_ml} мл</span>}
+              {dish.calories !== null && (
+                <span>
+                  {dish.calories.toLocaleString('ru-RU')} ккал / 100{' '}
+                  {dish.volume_ml != null ? 'мл' : 'г'}
+                </span>
+              )}
             </div>
             <details className="dish-detail">
               <summary>Состав и КБЖУ</summary>
               <p>{dish.description ?? 'Описание не указано.'}</p>
               <p>
-                Б {dish.proteins ?? '—'} · Ж {dish.fats ?? '—'} · У{' '}
-                {dish.carbs ?? '—'}
+                На 100 {dish.volume_ml != null ? 'мл' : 'г'}: белки{' '}
+                {dish.proteins?.toLocaleString('ru-RU') ?? '—'} г · жиры{' '}
+                {dish.fats?.toLocaleString('ru-RU') ?? '—'} г · углеводы{' '}
+                {dish.carbs?.toLocaleString('ru-RU') ?? '—'} г
               </p>
             </details>
             <div className="dish-bottom">

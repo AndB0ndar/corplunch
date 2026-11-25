@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Empty, ErrorNotice, Loading, Metrics } from '../components';
 import { money, shiftDate, today } from '../format';
 import { useSession } from '../session';
+import { DailySpend } from './DailySpend';
 
 export function Statistics() {
   const { api } = useSession();
@@ -179,6 +180,13 @@ export function Statistics() {
                         </table>
                       </div>
                     </section>
+                    <DailySpend
+                      key={JSON.stringify([from, to, department])}
+                      from={from}
+                      to={to}
+                      department={department}
+                      total={stats.total_actual_kopecks}
+                    />
                     {stats.price_changes.length > 0 && (
                       <section className="panel">
                         <h2>Изменения цен</h2>

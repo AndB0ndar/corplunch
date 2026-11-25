@@ -17,12 +17,28 @@ test('two employees → cutoff → export → statistics → locked employee pla
 }) => {
   await page.goto('/');
   await enter(page, 'Сотрудник');
+  const gnocchi = page
+    .getByRole('article')
+    .filter({
+      has: page.getByRole('heading', { name: 'Картофельные ньокки' }),
+    });
+  await gnocchi.getByText('Состав и КБЖУ').click();
+  await expect(gnocchi).toContainText('Баранина, баклажаны');
+  await expect(gnocchi).toContainText('120 ккал / 100 г');
+  await expect(gnocchi).toContainText('белки 6 г · жиры 5 г · углеводы 12 г');
+  const drink = page
+    .getByRole('article')
+    .filter({ has: page.getByRole('heading', { name: 'Ягодный напиток' }) });
+  await drink.getByText('Состав и КБЖУ').click();
+  await expect(drink).toContainText('500 мл');
+  await expect(drink).toContainText('43 ккал / 100 мл');
+  await expect(drink).toContainText('углеводы 10,7 г');
   await page
     .getByRole('button', { name: 'Добавить Картофельные ньокки', exact: true })
     .click();
   await page
     .getByRole('button', {
-      name: 'Добавить Салат с печёной свёклой',
+      name: 'Добавить Салат с рукколой',
       exact: true,
     })
     .click();
@@ -45,7 +61,7 @@ test('two employees → cutoff → export → statistics → locked employee pla
     page.getByText('Приём закрыт. Цены и наличие уточнены.'),
   ).toBeVisible();
   await expect(
-    page.getByRole('cell', { name: 'Салат с печёной свёклой', exact: true }),
+    page.getByRole('cell', { name: 'Салат с рукколой', exact: true }),
   ).toHaveCount(0);
   const downloadEvent = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Скачать список для заказа' }).click();

@@ -37,6 +37,7 @@ export type Dish = {
   price_kopecks: number;
   old_price_kopecks: number | null;
   weight_g: number | null;
+  volume_ml?: number;
   proteins: number | null;
   fats: number | null;
   carbs: number | null;

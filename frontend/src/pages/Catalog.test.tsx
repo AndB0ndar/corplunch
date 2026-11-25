@@ -85,6 +85,17 @@ function setup(overrides: Partial<AppApi> = {}) {
   );
   return client;
 }
+it('uses the matching local photo if the supplier image fails', async () => {
+  const remote = 'https://example.com/unavailable.jpeg';
+  setup({ catalog: async () => [{ ...dish, image_url: remote }] });
+  const image = await screen.findByRole('img', { name: dish.name });
+  expect(image).toHaveAttribute('src', remote);
+  fireEvent.error(image);
+  expect(image.getAttribute('src')).toContain('/875.jpeg');
+  fireEvent.error(image);
+  expect(screen.getByText('Фото пока нет')).toBeVisible();
+});
+
 it('shows the authoritative saved composition after cutoff rejects a dirty draft', async () => {
   let closed = false;
   setup({

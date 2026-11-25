@@ -237,6 +237,12 @@
   width: 100%;
   object-fit: cover;
 }
+.dish-photo-missing {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: #535d51;
+}
 .tone-1 {
   background: #e9e6dc;
 }
@@ -1094,4 +1100,26 @@
     animation: none !important;
     transition: none !important;
   }
+}
+.daily-spend {
+  padding: 0;
+  list-style: none;
+}
+.daily-spend li {
+  display: grid;
+  grid-template-columns: auto minmax(1rem, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0.7rem 0;
+  font-variant-numeric: tabular-nums;
+}
+.daily-bar {
+  background-color: #eef0e7;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.daily-bar i {
+  display: block;
+  height: 0.85rem;
+  background-color: #718765;
 }
